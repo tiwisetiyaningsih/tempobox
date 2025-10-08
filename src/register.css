@@ -1,3 +1,114 @@
 body {
     font-family: 'Inter', sans-serif;
 }
+
+/* src/pages/register.css */
+
+.register-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(
+      to bottom,
+      rgba(25, 122, 255, 0.1),
+      rgba(31, 194, 149, 0.2)
+    );
+    padding: 30px;
+  }
+  
+  .register-container {
+    width: 100%;
+    max-width: 562px; /* batas maksimal biar desain tetap seperti sebelumnya */
+  }
+  
+  .back-link {
+    font-size: 16px;
+    color: #197aff;
+  }
+  
+  .back-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+  }
+  
+  .brand-title {
+    font-size: 22px;
+    color: #212121;
+    margin-top: 20px;
+  }
+  
+  .brand-subtitle {
+    font-size: 16px;
+    color: #424242;
+  }
+  
+  .register-card {
+    border-radius: 15px;
+  }
+  
+  .form-title {
+    font-size: 22px;
+  }
+  
+  .form-subtitle {
+    font-size: 16px;
+  }
+  
+  .form-control {
+    height: 48px;
+  }
+  
+  /* 🧠 Responsiveness section */
+  @media (max-width: 768px) {
+    .register-container {
+      padding: 10px;
+    }
+  
+    .register-card {
+      padding: 30px !important;
+    }
+  
+    .brand-title {
+      font-size: 20px;
+    }
+  
+    .form-title {
+      font-size: 20px;
+    }
+  
+    .form-control {
+      height: 44px;
+      font-size: 15px;
+    }
+  
+    button {
+      height: 44px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .register-card {
+      padding: 20px !important;
+    }
+  
+    .brand-title {
+      font-size: 18px;
+    }
+  
+    .form-title {
+      font-size: 18px;
+    }
+  
+    .form-control {
+      font-size: 14px;
+    }
+  }
+
+
+  
+  
+  

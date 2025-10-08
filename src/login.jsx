@@ -1,7 +1,7 @@
 // src/pages/login.jsx
 import { useState } from "react";
-import './register.css'
-import { Link } from 'react-router-dom';
+import "./register.css"; // masih bisa pakai file yang sama
+import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
   const [form, setForm] = useState({
@@ -13,111 +13,107 @@ function Login() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    // Validasi sederhana
-    if (!form.email || !form.password) {
-      alert("Email dan password wajib diisi!");
-      return;
+    try {
+      const res = await fetch("http://localhost:3001/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+      alert(data.message);
+      if (data.message === "Login berhasil") {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      alert("Terjadi kesalahan saat login.");
     }
-  
-    console.log("Data Login:", form);
-    alert("Login berhasil!");
   };
-  
 
   return (
-    <div
-        style={{
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            background: 'linear-gradient(to bottom, rgba(25, 122, 255, 0.1), rgba(31, 194, 149, 0.2))',
-            padding: '30px',
-        }}
-    >
-        {/* Header */} 
-        <div style={{ width: '562px' }}>
-            <div className="mb-4">
-                <a href="/" className="d-flex align-items-center gap-2 mb-3 fw-semibold text-decoration-none" style={{ fontSize: '16px', color: '#197AFF' }}>
-                    <i
-                        className="bi bi-chevron-left"
-                        style={{
-                            fontSize: '20px',
-                            width: '20px',
-                            height: '20px',
-                            lineHeight: '20px',
-                        }}
-                    ></i>
-                    Kembali ke Beranda
-                </a>
+    <div className="register-page">
+      {/* Header */}
+      <div className="register-container">
+        <div className="mb-4">
+          <a
+            href="/beranda"
+            className="d-flex align-items-center gap-2 mb-3 fw-semibold text-decoration-none back-link"
+          >
+            <i className="bi bi-chevron-left back-icon"></i>
+            Kembali ke Beranda
+          </a>
 
-                <h2 className="fw-bold text-center" style={{ fontSize: '22px', color: '#212121', marginTop: '20px' }}>
-                    TempoBox
-                </h2>
+          <h2 className="fw-bold text-center brand-title">TempoBox</h2>
 
-                <p className="text-center mb-4" style={{ fontSize: '16px', color: '#424242' }}>
-                    Simpan Barang Aman & Fleksibel
-                </p>
-            </div>
-
-            <div className="card shadow-sm p-5" style={{ borderRadius: "15px" }}>
-                {/* Subjudul */}
-                <h5 className="text-primary fw-bold" style={{ fontSize: "22px" }}>Selamat Datang di TempoBox</h5>
-                <p className="text-muted" style={{ fontSize: "16px" }}>
-                 Silakan masukkan email dan kata sandi untuk mulai menggunakan layanan penyimpanan TempoBox.
-                </p>
-
-                {/* Form */}
-                <form onSubmit={handleSubmit}>
-                <div className="mb-2">
-                    <label htmlFor="email" className="form-label fw-medium" style={{ fontSize: '16px', color: '#212121' }}>
-                        Email
-                    </label>
-                    <input
-                    type="email"
-                    className="form-control"
-                    name="email"
-                    placeholder="Masukkan alamat email"
-                    value={form.email}
-                    onChange={handleChange}
-                    required
-                    style={{ height: '48px' }}
-                    />
-                </div>
-                <div className="mb-2">
-                    <label htmlFor="password" className="form-label fw-medium" style={{ fontSize: '16px', color: '#212121' }}>
-                        Kata Sandi
-                    </label>
-                    <input
-                    type="password"
-                    className="form-control"
-                    name="password"
-                    placeholder="Masukkan kata sandi"
-                    value={form.password}
-                    onChange={handleChange}
-                    required
-                    style={{ height: '48px' }}
-                    />
-                </div>
-
-                <button type="submit" className="btn btn-primary w-100 mt-2 fw-medium" style={{ height: '48px' }}>
-                    Masuk
-                </button>
-                </form>
-
-                {/* Footer */}
-                <p className="text-center text-muted mt-3" style={{ fontSize: '16px' }}>
-                Belum punya akun?{" "}
-                <Link to="/register" className="text-primary fw-semibold">
-                    Daftar
-                </Link>
-                </p>
-            </div>
+          <p className="text-center mb-4 brand-subtitle">
+            Simpan Barang Aman & Fleksibel
+          </p>
         </div>
+
+        <div className="card shadow-sm p-5 register-card">
+          {/* Subjudul */}
+          <h5 className="text-primary fw-bold form-title">
+            Selamat Datang di TempoBox
+          </h5>
+          <p className="text-muted form-subtitle">
+            Silakan masukkan email dan kata sandi untuk mulai menggunakan
+            layanan penyimpanan TempoBox.
+          </p>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit}>
+            <div className="mb-2">
+              <label htmlFor="email" className="form-label fw-medium">
+                Email
+              </label>
+              <input
+                type="email"
+                className="form-control"
+                name="email"
+                placeholder="Masukkan alamat email"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-2">
+              <label htmlFor="password" className="form-label fw-medium">
+                Kata Sandi
+              </label>
+              <input
+                type="password"
+                className="form-control"
+                name="password"
+                placeholder="Masukkan kata sandi"
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary w-100 mt-2 fw-medium"
+            >
+              Masuk
+            </button>
+          </form>
+
+          {/* Footer */}
+          <p className="text-center text-muted mt-3">
+            Belum punya akun?{" "}
+            <Link to="/register" className="text-primary fw-semibold">
+              Daftar
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
