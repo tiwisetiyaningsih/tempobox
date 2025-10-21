@@ -8,7 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const about = () => {
   return (
-    <div>
+    <div style={{ overflowX: 'hidden' }}>
       <h2 style={{ textAlign: "center", fontWeight: "bold", marginTop: '50px' }}>Tentang Kami</h2>
 
         {/* Cerita & Visi Misi */}
@@ -17,8 +17,9 @@ const about = () => {
             display: "flex", 
             gap: "20px", 
             marginTop: "10px", 
-            padding: "20px 115px", 
-            flexWrap: "wrap"  // biar bisa turun ke bawah
+            padding: "20px 5%", 
+            flexWrap: "wrap",  // biar bisa turun ke bawah
+            boxSizing: "border-box"
         }}
         >
         <div 
@@ -34,17 +35,10 @@ const about = () => {
             <h5 style={{marginLeft: '5px', color: '#197Aff'}}>TempoBox</h5>
             </div>
             <div className="flex-row d-flex">
-            <p style={{fontSize: '16px', fontWeight:'bold', color:'#197Aff'}}>
-            TempoBox
-            </p>
-            <p style={{marginLeft: '5px', fontSize: '16px'}}>hadir dari pengalaman pendiri yang kesulitan mencari tempat</p>
+              <p className="mb-1" style={{ textAlign: 'justify' }}>
+                <span className="fw-bold text-primary">TempoBox</span> hadir dari pengalaman pendiri yang kesulitan mencari tempat penyimpanan aman dan fleksibel saat pindah dari asrama ke kost baru yang belum siap ditempati. Dari situ, kami menyadari bahwa banyak orang membutuhkan solusi penyimpanan sementara yang praktis, terpercaya, dan mudah diakses. Dengan TempoBox, kami menghadirkan ruang penyimpanan pribadi yang terjaga keamanannya dan dapat disesuaikan dengan kebutuhan, sehingga Anda bisa merasa tenang di setiap masa transisi hidup.
+              </p>
             </div>
-            <p style={{marginTop: '-15px',fontSize: '16px'}}>
-            penyimpanan aman dan fleksibel saat pindah dari asrama ke kost baru yang belum siap ditempati. 
-            Dari situ, kami menyadari bahwa banyak orang membutuhkan solusi penyimpanan sementara yang praktis, terpercaya, 
-            dan mudah diakses. Dengan TempoBox, kami menghadirkan ruang penyimpanan pribadi yang terjaga keamanannya 
-            dan dapat disesuaikan dengan kebutuhan, sehingga Anda bisa merasa tenang di setiap masa transisi hidup.
-            </p>
         </div>
 
         <div 
@@ -61,16 +55,16 @@ const about = () => {
             <h5 style={{marginLeft: '5px', color: '#197Aff'}}>TempoBox</h5>
             </div>
             <b style={{color: '#197Aff'}}>Visi:</b>
-            <p style={{fontSize: '16px'}}> 
+            <p style={{fontSize: '16px', textAlign: 'justify'}}> 
             Menjadi penyedia solusi penyimpanan terpercaya dan inovatif di Indonesia, 
             dengan layanan yang aman, fleksibel, serta mendukung efisiensi dan kenyamanan pelanggan.
             </p>
             <p><b style={{color: '#197Aff'}}>Misi:</b></p>
             <ol>
-            <li style={{fontSize: '16px'}}>Menyediakan layanan penyimpanan yang mudah diakses, aman, dan fleksibel sesuai kebutuhan pelanggan.</li>
-            <li style={{fontSize: '16px'}}>Memberikan pengalaman penyimpanan yang sederhana, nyaman, dan bebas stres melalui sistem yang transparan dan modern.</li>
-            <li style={{fontSize: '16px'}}>Menjaga standar keamanan tinggi serta kualitas layanan yang konsisten.</li>
-            <li style={{fontSize: '16px'}}>Membangun kepercayaan jangka panjang dengan mengutamakan kepuasan dan kenyamanan pelanggan.</li>
+            <li style={{fontSize: '16px', textAlign: 'justify'}}>Menyediakan layanan penyimpanan yang mudah diakses, aman, dan fleksibel sesuai kebutuhan pelanggan.</li>
+            <li style={{fontSize: '16px', textAlign: 'justify'}}>Memberikan pengalaman penyimpanan yang sederhana, nyaman, dan bebas stres melalui sistem yang transparan dan modern.</li>
+            <li style={{fontSize: '16px', textAlign: 'justify'}}>Menjaga standar keamanan tinggi serta kualitas layanan yang konsisten.</li>
+            <li style={{fontSize: '16px', textAlign: 'justify'}}>Membangun kepercayaan jangka panjang dengan mengutamakan kepuasan dan kenyamanan pelanggan.</li>
             </ol>
         </div>
         </div>

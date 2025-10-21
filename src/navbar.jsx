@@ -4,10 +4,13 @@ import header from "./header";
 import layanan from "./layanan";
 import about from "./about";
 import kontak from "./kontak";
+import Login from "./login";
+import { Link } from "react-router-dom";
+
 
 function navbar() {
   return (
-    <nav className="navbar navbar-expand-lg">
+    <nav className="navbar navbar-expand-lg sticky-top mb-2">
         <div className="container">
         <a className="navbar-brand fw-bold text-primary" href="#header">
           <img src={logoTempoBox} className="logoTempoBox" alt="TempoBox logo"/>
@@ -36,7 +39,8 @@ function navbar() {
               <a className="nav-link" href="#kontak">Kontak</a>
             </li>
           </ul>
-          <a href="#" className="btn btn-primary ms-3">Masuk</a>
+          {/* <a href="./login.jsx" className="btn btn-primary mt-2">Masuk</a> */}
+          <Link to="/login" className="btn btn-primary mt-2">Masuk</Link>
         </div>
       </div>
     </nav>
