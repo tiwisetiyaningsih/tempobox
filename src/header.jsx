@@ -1,35 +1,26 @@
 import React from "react";
-import ilustrasi from './assets/ilustrasi.svg';
+import hero3d from "./assets/ilustrasi.svg"; 
+import './style.css';
 
-function header() {
+export default function Header() {
   return (
-    <section style={{paddingTop:'10px', paddingBottom: '10px'}}>
-      <div className="container d-flex flex-lg-row flex-column align-items-center">
-        {/* Text */}
-        <div className="col-lg-6 text-center text-lg-start">
-          <h1 className="fw-bold display-5">
-            Simpan Barang <br />
-            <span className="text-primary">Aman & Fleksibel</span>
-          </h1>
-          <p className="text-muted mt-3">
-            TempoBox adalah solusi penyimpanan sementara yang aman dan
-            terpercaya. Cocok untuk mahasiswa, renovasi rumah, dan usaha kecil.
-          </p>
-          <button className="btn btn-primary mt-3">Sewa Sekarang</button>
-        </div>
+    <section className="hero-section text-white">
+      <div className="overlay"></div>
+      <div className="container position-relative">
+        <h1 className="fw-bold display-5 mb-3" style={{fontSize:'54px'}}>
+          Temukan Gudang Aman di <br /> Bandung
+        </h1>
+        <p style={{fontSize:'18px'}}>Cari, bandingkan, dan hubungi pemilik langsung lewat <br></br>WhatsApp tanpa takut penipuan.</p>
 
-        {/* Image */}
-        <div className="text-center" style={{minWidth:'104vh'}}>
-          <img
-            src={ilustrasi}
-            alt="Illustration"
-            className="img-fluid"
-            style={{ maxHeight: "350px" }}
-          />
-        </div>
+        <a 
+              href="#daftarGudang" 
+              className="btn btn-outline-light fw-bold mt-3 py-2 px-4" 
+              style={{ border: '2px solid white' }}
+            >
+              Lihat Daftar Gudang Sekarang
+            </a>
       </div>
+      <img src={hero3d} alt="Hero ilustrasi" className="hero-img"  style={{marginBottom:'50px', width:'433px', height:'415px'}}/>
     </section>
   );
 }
-
-export default header;
