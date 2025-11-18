@@ -102,11 +102,11 @@ function Register() {
       </div>
 
       {/* Kolom Kanan: Form Register */}
-      <div className="col-12 col-md-7 d-flex flex-column justify-content-start align-items-start p-4 p-md-5 login-right-col">
+      <div className="col-12 col-md-7 d-flex flex-column justify-content-start align-items-start p-4 p-md-3 login-right-col">
         <div className="login-form-container ms-5" style={{ width: '100%', maxWidth: '80%' }}>
 
           {/* Header & Link Kembali */}
-          <div className="mb-5">
+          <div className="mb-3">
             <Link
               to="/beranda"
               className="d-flex align-items-center gap-2 mb-3 fw-semibold text-decoration-none text-muted"
@@ -117,7 +117,7 @@ function Register() {
 
             {/* Judul Utama */}
             <div className="justify-content-center">
-              <h3 className="fw-bold text-primary mb-2 mt-2 text-center">
+              <h3 className="fw-bold text-primary mb-1 mt-2 text-center">
                 Daftar Akun TempoBox
               </h3>
               <p className="text-muted text-center">

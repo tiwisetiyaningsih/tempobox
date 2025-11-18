@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./register.css";
+import "./login.css";
 import { Link, useNavigate } from "react-router-dom";
 // Pastikan Anda sudah mengimpor Bootstrap Icons (misalnya di index.html atau setup proyek Anda)
 
@@ -44,6 +44,11 @@ function Login() {
     setShowPassword(!showPassword);
   };
 
+  const handleGoToPage = () => {
+    console.log("Login Berhasil...");
+    navigate("/dashboard_customer");
+  };
+
   return (
     <div className="d-flex vh-100 login-page-split">
 
@@ -82,7 +87,8 @@ function Login() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit}>
+          {/* <form onSubmit={handleSubmit}> */}
+          <form>
             <div className="mb-3 ">
               <label htmlFor="email" className="form-label fw-medium">
                 Email
@@ -136,6 +142,7 @@ function Login() {
             <button
               type="submit"
               className="btn btn-primary w-100 fw-medium mt-4"
+              onClick={handleGoToPage}
             >
               Masuk
             </button>
