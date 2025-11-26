@@ -19,6 +19,7 @@ import FavoriteCustomer from './favoriteCustomer.jsx';
 import ProfileCustomer from './profileCustomer.jsx';
 import UpdateProfileCustomer from './updateProfileCustomer.jsx';
 import DetailGudang from './detailGudang.jsx';
+import DashboardAdmin from './dashboard_admin.jsx';
 
 function App() {
   return (
@@ -75,6 +76,7 @@ function App() {
           <Route path="/profile_customer" element={<ProfileCustomer />} />
           <Route path='/update_profile_customer' element= {<UpdateProfileCustomer />} />
           <Route path='/detail_gudang' element= {<DetailGudang />} />
+          <Route path='/dashboard_admin' element= {<DashboardAdmin />} />
         </Routes>
       </Router>
     </>

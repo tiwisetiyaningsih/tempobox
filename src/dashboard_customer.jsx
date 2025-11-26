@@ -1,13 +1,23 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { HeartFill, Search, Person, BoxArrowRight } from "react-bootstrap-icons"; 
 import logoTempoBox from './assets/Logo.svg';
 import gudang1 from './assets/gudang.svg'; 
-import profil_user from './assets/profil_user.svg';
+import profilDefault from './assets/profil_user.svg';
 
 const DashboardCustomer = () => {
-    
-    // Data Dummy untuk Gudang
+
+    const [userData, setUserData] = useState(null);
+
+    useEffect(() => {
+        const stored = localStorage.getItem("user");
+
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            setUserData(parsed);
+        }
+    }, []);
+
     const dummyGudang = [
         { id: 1, name: "Rumah Ibu Lenny", location: "Bandung", price: "Rp 2.000.000/bulan", status: "Tersedia", isFavorite: true },
         { id: 2, name: "Gudang Pak Budi", location: "Cimahi", price: "Rp 3.500.000/bulan", status: "Terisi", isFavorite: false },
@@ -18,65 +28,82 @@ const DashboardCustomer = () => {
     const handleLogout = () => {
         const isConfirmed = window.confirm("Anda yakin ingin keluar?");
         if (isConfirmed) {
+            localStorage.removeItem("user");
             window.location.href = "/beranda"; 
         } 
     };
 
-    // Fungsi untuk mengarahkan ke halaman Detail Gudang
     const handleLihatDetail = (gudangId) => {
-        // Mengarahkan ke path Detail Gudang. Contoh: /detail_gudang/1
         window.location.href = `/detail_gudang`; 
     };
 
     return (
         <div className="d-flex flex-column min-vh-100 bg-light">
-            {/* Navbar / Header */}
+
+            {/* NAVBAR */}
             <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom py-2">
                 <div className="container-fluid">
-                    {/* Logo */}
+
+                    {/* LOGO */}
                     <a className="navbar-brand fw-bold text-primary ms-4" href="/dashboard_customer">
-                        <img src={logoTempoBox} className="logoTempoBox" alt="TempoBox logo" style={{ height: '32px' }} />
+                        <img src={logoTempoBox} alt="TempoBox logo" style={{ height: '32px' }} />
                     </a>
 
-                    {/* Navigasi Kanan */}
-                    <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    {/* MENU */}
+                    <div className="collapse navbar-collapse justify-content-end">
                         <ul className="navbar-nav align-items-center">
+
                             <li className="nav-item me-4">
                                 <a className="nav-link text-decoration-none text-primary fw-semibold" href="/dashboard_customer">Beranda</a>
                             </li>
+
                             <li className="nav-item me-4">
                                 <a className="nav-link text-decoration-none text-muted" href="/favorite_customer">
                                     <HeartFill className="me-1 text-muted" size={16} /> Gudang Favorite
                                 </a>
                             </li>
-                            {/* Dropdown Profil */}
+
+                            {/* PROFILE DROPDOWN */}
                             <li className="nav-item dropdown me-4">
-                                <a className="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <img src={profil_user} alt="User Avatar" className="rounded-circle me-2" style={{ width: '35px', height: '35px' }} />
+                                <a className="nav-link dropdown-toggle d-flex align-items-center p-0" href="#" data-bs-toggle="dropdown">
+
+                                    {userData?.photo_profil ? (
+                                        <img
+                                            src={userData.photo_profil}
+                                            alt="User Avatar"
+                                            className="rounded-circle me-2"
+                                            style={{ width: '35px', height: '35px', objectFit: "cover" }}
+                                        />
+                                    ) : (
+                                        <i className="bi bi-person-circle fs-2 me-2 text-secondary" ></i>
+                                    )}
+
                                 </a>
-                                <ul className="dropdown-menu dropdown-menu-end p-2 shadow-lg" aria-labelledby="navbarDropdown" style={{ border: 'none' }}>
-                                    {/* Item Profile */}
+
+                                <ul className="dropdown-menu dropdown-menu-end p-2 shadow-lg">
                                     <li>
                                         <a className="dropdown-item py-2 rounded" href="/profile_customer">
                                             <Person size={16} className="me-2 text-secondary" /> Profile
                                         </a>
                                     </li>
-                                    {/* Item Keluar (Latar belakang merah) */}
+
                                     <li>
                                         <button className="dropdown-item py-2 rounded text-white bg-danger mt-1 fw-medium" onClick={handleLogout}>
                                             <BoxArrowRight size={16} className="me-2" /> Keluar
                                         </button>
                                     </li>
                                 </ul>
+
                             </li>
                         </ul>
                     </div>
+
                 </div>
             </nav>
 
-            {/* Main Content */}
-            <main className="flex-grow-1 p-4 d-flex flex-column align-items-center justify-content-start">
-                {/* Header Pencarian */}
+            {/* MAIN CONTENT */}
+            <main className="flex-grow-1 p-4 d-flex flex-column align-items-center">
+
                 <div className="text-center my-3">
                     <h1 className="fw-bold text-dark mb-2" style={{fontSize:'32px'}}>Temukan Gudang di Bandung</h1>
                     <p className="text-secondary fs-5" style={{fontSize:'20px'}}>Jelajahi berbagai gudang di Bandung, cek ketersediaan dan booking langsung!</p>
@@ -84,67 +111,58 @@ const DashboardCustomer = () => {
 
                 {/* Search Bar */}
                 <div className="input-group mb-5" style={{ maxWidth: '700px', width: '100%' }}>
-                    <span className="input-group-text bg-white border-end-0 pe-0 rounded-start-pill border py-2">
+                    <span className="input-group-text bg-white border-end-0 rounded-start-pill py-2">
                         <Search className="text-muted ms-3" size={20} />
                     </span>
                     <input
                         type="text"
-                        className="form-control border-start-0 ps-2 rounded-end-pill py-2 "
+                        className="form-control border-start-0 rounded-end-pill py-2"
                         placeholder="Cari Gudang"
-                        aria-label="Cari Gudang"
                         style={{ height: '50px' }}
                     />
                 </div>
 
-                {/* Grid Kartu Gudang - Menggunakan map() untuk loop data dummy */}
+                {/* LIST GUDANG */}
                 <div className="container-fluid">
                     <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
-                        
                         {dummyGudang.map((gudang) => (
                             <div className="col" key={gudang.id}>
                                 <div className="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
-                                    {/* Placeholder Image */}
+
                                     <div className="position-relative">
-                                        <img src={gudang1} className="card-img-top" alt={`Gudang ${gudang.name}`} style={{ height: '200px', objectFit: 'cover' }} />
-                                        
-                                        {/* Tombol Favorite */}
+                                        <img src={gudang1} className="card-img-top" style={{ height: '200px', objectFit: 'cover' }} />
+
                                         <button 
                                             className="btn btn-light rounded-circle p-1.5 position-absolute top-0 end-0 m-3 shadow-sm"
-                                            // Contoh aksi untuk tombol favorite (bisa ditambahkan logika state isFavorite)
                                             onClick={() => alert(`Toggle favorit untuk ${gudang.name}`)}
                                         >
-                                            {/* Warna icon berdasarkan status favorite */}
                                             <HeartFill size={16} className={gudang.isFavorite ? "text-danger" : "text-muted"} />
                                         </button>
                                     </div>
-                                    
-                                    {/* Card Body */}
+
                                     <div className="card-body p-3">
-                                        <h5 className="card-title fw-semibold mb-1">{gudang.name}</h5>
-                                        <p className="card-text text-muted mb-1 small">Lokasi: {gudang.location}</p>
-                                        <p className="card-text text-muted mb-1 small">Harga: {gudang.price}</p>
-                                        <p className="card-text text-muted mb-3 small">
-                                            Status: 
-                                            <span className={`fw-medium ${gudang.status === 'Tersedia' ? 'text-success' : 'text-danger'}`}> 
-                                                {gudang.status}
-                                            </span>
+                                        <h5 className="card-title fw-semibold">{gudang.name}</h5>
+                                        <p className="text-muted small mb-1">Lokasi: {gudang.location}</p>
+                                        <p className="text-muted small mb-1">Harga: {gudang.price}</p>
+                                        <p className="text-muted small mb-3">
+                                            Status: <span className={`fw-medium ${gudang.status === "Tersedia" ? "text-success" : "text-danger"}`}>{gudang.status}</span>
                                         </p>
-                                        
-                                        {/* Button Lihat Detail DENGAN FUNGSI BARU */}
+
                                         <button 
                                             className="btn btn-primary w-100 fw-medium"
-                                            onClick={() => handleLihatDetail(gudang.id)} 
-                                            // Menonaktifkan tombol jika status Terisi
-                                            disabled={gudang.status === 'Terisi'} 
+                                            onClick={() => handleLihatDetail(gudang.id)}
+                                            disabled={gudang.status === "Terisi"}
                                         >
                                             Lihat Detail
                                         </button>
+
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
+
             </main>
         </div>
     );
