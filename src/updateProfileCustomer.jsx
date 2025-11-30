@@ -1,296 +1,319 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-// Menggunakan EyeSlash dan Eye untuk fitur lihat/sembunyikan password
-import { HeartFill, Person, BoxArrowRight, ChevronLeft, Eye, EyeSlash, PersonFill } from "react-bootstrap-icons"; 
-import logoTempoBox from './assets/Logo.svg';
-import profil_user from './assets/profil_user.svg'; // Gambar placeholder default/ikon
-import photo_profile from './assets/photo_profile.svg' // Gambar profil yang sedang digunakan (Diana)
+import { HeartFill, Person, BoxArrowRight, PersonFill } from "react-bootstrap-icons";
+import logoTempoBox from "./assets/Logo.svg";
 
 const UpdateProfileCustomer = () => {
-    
-    // State untuk data form
-    const [formData, setFormData] = useState({
-        name: "Diana Putri Nabila",
-        email: "dianapn@gmail.com",
-        phone: "08999999999",
-        password: "password123", 
-        currentPhoto: photo_profile // Awalnya menggunakan foto profil
-    });
+  const [user, setUser] = useState(null);
+  const [filePhoto, setFilePhoto] = useState(null);
+  const [removePhoto, setRemovePhoto] = useState(false);
 
-    const [showPassword, setShowPassword] = useState(false);
-    const fileInputRef = useRef(null);
+  const [formState, setFormState] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    currentPhotoPreview: null,
+  });
 
-    // Variabel untuk mengecek apakah foto saat ini adalah placeholder
-    const isPlaceholder = formData.currentPhoto === profil_user;
+  const fileInputRef = useRef(null);
 
-    // --- Handlers Navigasi & Form (Tidak Berubah) ---
+  // LOAD USER DARI LOCALSTORAGE
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser);
+      setUser(parsed);
 
-    const handleLogout = () => {
-        const isConfirmed = window.confirm("Anda yakin ingin keluar?");
-        if (isConfirmed) {
-            window.location.href = "/beranda"; 
-        } 
-    };
+      setFormState({
+        name: parsed.name,
+        email: parsed.email,
+        phone: parsed.phone,
+        password: "",
+        currentPhotoPreview: null,
+      });
+    }
+  }, []);
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
+  // FOTO NAVBAR
+  const getNavbarPhotoUrl = () => {
+    if (!user?.photo_profil) return null;
+    return user.photo_profil.startsWith("http")
+      ? user.photo_profil
+      : `http://localhost:3001/uploads/${user.photo_profil}`;
+  };
 
-    const handleSaveData = (e) => {
-        e.preventDefault();
-        alert("Data berhasil disimpan!");
-        window.location.href = "/profile_customer"; 
-    };
+  // FOTO PREVIEW FORM
+  const getFormPhotoUrl = () => {
+    if (formState.currentPhotoPreview) return formState.currentPhotoPreview;
 
-    const handleBatal = (e) => {
-        e.preventDefault();
-        alert("Data gagal disimpan!");
-        window.location.href = "/profile_customer"; 
-    };
+    if (user?.photo_profil && !removePhoto) {
+      return user.photo_profil.startsWith("http")
+        ? user.photo_profil
+        : `http://localhost:3001/uploads/${user.photo_profil}`;
+    }
 
-    // --- Handlers Foto ---
-    
-    // Handler untuk Upload Foto: Memicu klik pada input file tersembunyi
-    const handleUploadButtonClick = () => {
-        fileInputRef.current.click();
-    };
+    return null;
+  };
 
-    // Handler saat file dipilih
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                // Set foto baru sebagai URL data
-                setFormData(prev => ({ ...prev, currentPhoto: reader.result }));
-                alert(`Foto baru '${file.name}' berhasil diunggah!`);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-    
-    // Handler untuk Hapus Foto: Mengganti foto dengan placeholder ikon
-    const handleDeletePhoto = () => {
-        // Hanya hapus jika foto saat ini bukan placeholder
-        if (!isPlaceholder) {
-            setFormData(prev => ({ ...prev, currentPhoto: profil_user })); // Ganti dengan placeholder
-            alert("Foto berhasil dihapus! Menggunakan placeholder.");
-        } else {
-            alert("Tidak ada foto yang bisa dihapus.");
-        }
-    };
+  const isPlaceholder = !getFormPhotoUrl();
 
-    return (
-        <div className="d-flex flex-column min-vh-100" style={{ backgroundColor: '#F8F9FA' }}> 
-            
-            {/* 1. Navbar / Header */}
-            <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom py-2">
-                <div className="container-fluid">
-                <a className="navbar-brand fw-bold text-primary ms-4" href="/dashboard_customer">
-                    <img src={logoTempoBox} className="logoTempoBox" alt="TempoBox logo" style={{ height: '32px' }} />
-                </a>
+  // INPUT HANDLER
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormState((prev) => ({ ...prev, [name]: value }));
+  };
 
-                <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
-                    <ul className="navbar-nav align-items-center">
-                    <li className="nav-item me-4">
-                        <a className="nav-link text-decoration-none text-muted" href="/dashboard_customer">Beranda</a>
-                    </li>
-                    <li className="nav-item me-4">
-                        <a className="nav-link text-decoration-none text-muted" href="/favorite_customer">
-                        <HeartFill className="me-1 text-muted" size={16} /> Gudang Favorite
-                        </a>
-                    </li>
-                    <li className="nav-item dropdown me-4">
-                        <a className="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src={profil_user} alt="User Avatar" className="rounded-circle me-2" style={{ width: '35px', height: '35px' }} />
-                        </a>
-                        <ul className="dropdown-menu dropdown-menu-end p-2 shadow-lg" aria-labelledby="navbarDropdown" style={{ border: 'none' }}>
-                        <li>
-                            <a className="dropdown-item py-2 rounded" href="/profile_customer">
-                            <Person size={16} className="me-2 text-secondary" /> Profile
-                            </a>
-                        </li>
-                        <li>
-                            <button className="dropdown-item py-2 rounded text-white bg-danger mt-1 fw-medium" onClick={handleLogout}>
-                            <BoxArrowRight size={16} className="me-2" /> Keluar
-                            </button>
-                        </li>
-                        </ul>
-                    </li>
-                    </ul>
-                </div>
-                </div>
-            </nav>
+  // BUTTON UPLOAD FOTO
+  const handleUploadButtonClick = () => fileInputRef.current.click();
 
-            {/* --- */}
-            
-            {/* 2. Main Content - Form Update Profile */}
-            <main className="flex-grow-1 p-4 d-flex justify-content-center">
-                <div className="mt-4" style={{ maxWidth: '800px', width: '100%' }}>
-                    {/* Kotak Form Utama */}
-                    <form onSubmit={handleSaveData} className="bg-white p-5 rounded-3 shadow-sm border">
-                        <div className="d-flex flex-wrap">
-                            
-                            {/* KIRI: Foto Profil dan Tombol Aksi */}
-                            <div className="me-5 mb-4 text-center d-flex flex-column align-items-start" style={{ width: '180px' }}>
-                                
-                                {/* Foto Profil / Placeholder Area */}
-                                <div className="mb-3 d-flex justify-content-center align-items-center rounded-3" 
-                                    style={{ 
-                                        width: '150px', 
-                                        height: '200px', 
-                                        backgroundColor: isPlaceholder ? '#e9ecef' : 'transparent', // Background abu-abu jika placeholder
-                                        border: isPlaceholder ? '1px solid #ced4da' : 'none',
-                                        overflow: 'hidden'
-                                    }}
-                                >
-                                    {isPlaceholder ? (
-                                        // Jika placeholder, tampilkan ikon PersonFill yang lebih besar
-                                        <PersonFill size={80} className="text-muted" />
-                                    ) : (
-                                        // Jika ada foto, tampilkan foto
-                                        <img 
-                                            src={formData.currentPhoto}
-                                            alt="Profile Picture" 
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
-                                    )}
-                                </div>
-                                
-                                {/* Input file tersembunyi (digunakan oleh useRef) */}
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    style={{ display: 'none' }}
-                                    accept="image/*"
-                                />
+  // KETIKA FILE DIPILIH
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-                                {/* Tombol Upload Foto (Biru) */}
-                                <button 
-                                    type="button" 
-                                    className="btn btn-primary w-100 mb-2 py-2 fw-medium" 
-                                    onClick={handleUploadButtonClick} 
-                                >
-                                    Upload Foto
-                                </button>
-                                
-                                {/* Tombol Hapus Foto (Merah) */}
-                                <button 
-                                    type="button" 
-                                    className="btn btn-danger w-100 py-2 fw-medium" 
-                                    onClick={handleDeletePhoto}
-                                    // Menonaktifkan tombol jika foto yang ditampilkan sudah menjadi placeholder
-                                    disabled={isPlaceholder} 
-                                >
-                                    Hapus Foto
-                                </button>
-                            </div>
+    setFilePhoto(file);
+    setRemovePhoto(false);
 
-                            {/* KANAN: Input Form */}
-                            <div className="flex-grow-1">
-                                
-                                {/* Nama Lengkap */}
-                                <div className="mb-3">
-                                    <label htmlFor="name" className="form-label text-muted small mb-0">Nama Lengkap</label>
-                                    <input 
-                                        type="text" 
-                                        className="form-control" 
-                                        id="name" 
-                                        name="name" 
-                                        value={formData.name}
-                                        onChange={handleInputChange}
-                                        required 
-                                        style={{ height: '50px' }}
-                                    />
-                                </div>
-                                
-                                {/* Email */}
-                                <div className="mb-3">
-                                    <label htmlFor="email" className="form-label text-muted small mb-0">Email</label>
-                                    <input 
-                                        type="email" 
-                                        className="form-control" 
-                                        id="email" 
-                                        name="email" 
-                                        value={formData.email}
-                                        onChange={handleInputChange}
-                                        required 
-                                        style={{ height: '50px' }}
-                                    />
-                                </div>
-                                
-                                {/* No Telepon */}
-                                <div className="mb-3">
-                                    <label htmlFor="phone" className="form-label text-muted small mb-0">No Telepon</label>
-                                    <input 
-                                        type="tel" 
-                                        className="form-control" 
-                                        id="phone" 
-                                        name="phone" 
-                                        value={formData.phone}
-                                        onChange={handleInputChange}
-                                        required 
-                                        style={{ height: '50px' }}
-                                    />
-                                </div>
-                                
-                                {/* Password dengan tombol lihat */}
-                                <div className="mb-3">
-                                    <label htmlFor="password" className="form-label text-muted small mb-0">Password</label>
-                                    <div className="input-group">
-                                        <input 
-                                            // Tipe input berubah berdasarkan state showPassword
-                                            type={showPassword ? "text" : "password"} 
-                                            className="form-control" 
-                                            id="password" 
-                                            name="password" 
-                                            value={formData.password}
-                                            onChange={handleInputChange}
-                                            style={{ height: '50px' }}
-                                        />
-                                        <button 
-                                            className="btn btn-outline-secondary" 
-                                            type="button" 
-                                            onClick={() => setShowPassword(prev => !prev)}
-                                            style={{ height: '50px' }}
-                                        >
-                                            {/* Ikon mata terbuka atau tertutup */}
-                                            {showPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {/* Tombol Simpan Data */}
-                        <div className="d-flex justify-content-between gap-3 mt-4">
-                            {/* Tombol Batal (Merah, di Kiri) */}
-                            <button 
-                                type="button" 
-                                className="btn btn-outline-danger flex-fill py-3 fw-medium" 
-                                style={{ fontSize: '18px' }} 
-                                onClick={handleBatal} 
-                            >
-                                Batal
-                            </button>
-                            
-                            {/* Tombol Simpan Data (Biru, di Kanan) */}
-                            <button 
-                                type="submit" 
-                                className="btn btn-primary flex-fill py-3 fw-medium" 
-                                style={{ fontSize: '18px' }} 
-                            >
-                                Simpan Data
-                            </button>
-                        </div>
-                    </form>
-                    
-                </div>
-            </main>
-        </div>
-    );
+    setFormState((prev) => ({
+      ...prev,
+      currentPhotoPreview: URL.createObjectURL(file),
+    }));
+
+    alert("Foto dipilih! Klik 'Simpan Data' untuk upload.");
+  };
+
+  // HAPUS FOTO PROFIL
+  const handleDeletePhoto = () => {
+    if (!window.confirm("Yakin ingin menghapus foto profil?")) return;
+
+    setFilePhoto(null);
+    setRemovePhoto(true);
+
+    setFormState((prev) => ({
+      ...prev,
+      currentPhotoPreview: null,
+    }));
+
+    alert("Foto akan dihapus setelah klik 'Simpan Data'.");
+  };
+
+  // FETCH USER BARU SETELAH UPDATE
+  const fetchUpdatedUser = async (id) => {
+    const res = await fetch(`http://localhost:3001/users/${id}`);
+    return await res.json();
+  };
+
+  // SIMPAN DATA
+  const handleSaveData = async (e) => {
+    e.preventDefault();
+    if (!user) return alert("User tidak ditemukan!");
+
+    const form = new FormData();
+    form.append("name", formState.name);
+    form.append("email", formState.email);
+    form.append("phone", formState.phone);
+
+    if (formState.password.trim() !== "") {
+      form.append("password", formState.password);
+    }
+
+    // JIKA UPLOAD FOTO BARU
+    if (filePhoto) {
+      form.append("photo_profil", filePhoto);
+      form.append("removePhoto", "true");
+    }
+
+    // JIKA HAPUS FOTO TANPA UPLOAD BARU
+    if (removePhoto && !filePhoto) {
+      form.append("removePhoto", "true");
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/users/${user.id}`, {
+        method: "PUT",
+        body: form,
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        return alert(err.message || "Gagal update profile");
+      }
+
+      const updatedUser = await fetchUpdatedUser(user.id);
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+
+      alert("Profile berhasil diperbarui!");
+      window.location.href = "/profile_customer";
+
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan saat update profile.");
+    }
+  };
+
+  const handleBatal = () => {
+    window.location.href = "/profile_customer";
+  };
+
+  const handleLogout = () => {
+    if (window.confirm("Yakin ingin keluar?")) {
+      localStorage.removeItem("user");
+      window.location.href = "/beranda";
+    }
+  };
+
+  return (
+    <div className="d-flex flex-column min-vh-100" style={{ backgroundColor: "#F8F9FA" }}>
+      {/* NAVBAR */}
+      <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom py-2">
+        <div className="container-fluid">
+          <a className="navbar-brand fw-bold text-primary ms-4" href="/dashboard_customer">
+            <img src={logoTempoBox} alt="TempoBox" style={{ height: "32px" }} />
+          </a>
+
+          <div className="collapse navbar-collapse justify-content-end">
+            <ul className="navbar-nav align-items-center">
+              <li className="nav-item me-4">
+                <a className="nav-link text-muted" href="/dashboard_customer">Beranda</a>
+              </li>
+
+              <li className="nav-item me-4">
+                <a className="nav-link text-muted" href="/favorite_customer">
+                  <HeartFill size={16} className="me-1" /> Gudang Favorite
+                </a>
+              </li>
+
+              <li className="nav-item dropdown me-4">
+                <a className="nav-link dropdown-toggle d-flex align-items-center p-0" href="#" data-bs-toggle="dropdown">
+                  {getNavbarPhotoUrl() ? (
+                    <img
+                      src={getNavbarPhotoUrl()}
+                      alt="avatar"
+                      className="rounded-circle me-2"
+                      style={{ width: "35px", height: "35px", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <i className="bi bi-person-circle fs-2 me-2 text-secondary"></i>
+                  )}
+                </a>
+
+                <ul className="dropdown-menu dropdown-menu-end p-2 shadow-lg">
+                  <li>
+                    <a className="dropdown-item py-2" href="/profile_customer">
+                      Profile
+                    </a>
+                  </li>
+                  <li>
+                    <button className="dropdown-item bg-danger text-white mt-1" onClick={handleLogout}>
+                      <BoxArrowRight size={16} className="me-2" /> Keluar
+                    </button>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      {/* MAIN FORM */}
+      <main className="flex-grow-1 p-4 d-flex justify-content-center">
+        <div className="mt-4" style={{ maxWidth: "800px", width: "100%" }}>
+          <form onSubmit={handleSaveData} className="bg-white p-5 rounded-3 shadow-sm border">
+            <div className="d-flex flex-wrap">
+
+              {/* FOTO */}
+              <div className="me-5 mb-4 text-center" style={{ width: "180px" }}>
+                <div
+                  className="mb-3 d-flex justify-content-center align-items-center rounded-3"
+                  style={{
+                    width: "150px",
+                    height: "200px",
+                    backgroundColor: isPlaceholder ? "#e9ecef" : "transparent",
+                    border: isPlaceholder ? "1px solid #ced4da" : "none",
+                    overflow: "hidden",
+                  }}
+                >
+                  {isPlaceholder ? (
+                    <PersonFill size={80} className="text-muted" />
+                  ) : (
+                    <img
+                      src={getFormPhotoUrl()}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      alt="profil"
+                    />
+                  )}
+                </div>
+
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  style={{ display: "none" }}
+                  accept="image/*"
+                />
+
+                <button type="button" className="btn btn-primary w-100 mb-2 py-2" onClick={handleUploadButtonClick}>
+                  Upload Foto
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-danger w-100 py-2"
+                  disabled={isPlaceholder}
+                  onClick={handleDeletePhoto}
+                >
+                  Hapus Foto
+                </button>
+              </div>
+
+              {/* INPUT FORM */}
+              <div className="flex-grow-1">
+                <div className="mb-3">
+                  <label className="form-label text-muted small">Nama Lengkap</label>
+                  <input type="text" className="form-control" name="name" value={formState.name} onChange={handleInputChange} />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label text-muted small">Email</label>
+                  <input type="email" className="form-control" name="email" value={formState.email} onChange={handleInputChange} />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label text-muted small">No Telepon</label>
+                  <input type="text" className="form-control" name="phone" value={formState.phone} onChange={handleInputChange} />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label text-muted small">Password</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="password"
+                    placeholder="Isi jika ingin mengganti password"
+                    value={formState.password}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-between gap-3 mt-4">
+              <button type="button" className="btn btn-outline-danger flex-fill py-3" onClick={handleBatal}>
+                Batal
+              </button>
+
+              <button type="submit" className="btn btn-primary flex-fill py-3">
+                Simpan Data
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  );
 };
 
 export default UpdateProfileCustomer;

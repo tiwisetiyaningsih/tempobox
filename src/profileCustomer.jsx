@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { HeartFill, Person, BoxArrowRight } from "react-bootstrap-icons"; 
 import logoTempoBox from './assets/Logo.svg';
-import photo_profile from './assets/photo_profile.svg';
 
 const ProfileCustomer = () => {
 
@@ -29,6 +28,17 @@ const ProfileCustomer = () => {
             localStorage.removeItem("user");
             window.location.href = "/beranda"; 
         }
+    };
+
+    // LOGIC SAJA, UI TIDAK DIUBAH
+    const getPhotoUrl = () => {
+        if (!userData?.photo_profil) return null;
+
+        // Jika sudah berbentuk URL penuh
+        if (userData.photo_profil.startsWith("http")) return userData.photo_profil;
+
+        // Jika hanya nama file → generate URL
+        return `http://localhost:3001/uploads/${userData.photo_profil}`;
     };
 
     return (
@@ -63,10 +73,10 @@ const ProfileCustomer = () => {
                             <li className="nav-item dropdown me-4">
                                 <a className="nav-link dropdown-toggle d-flex align-items-center p-0" href="#" data-bs-toggle="dropdown">
 
-                                    {/* FOTO PROFIL LOGIN / ICON DEFAULT */}
-                                    {userData?.photo_profil ? (
+                                    {/* FOTO PROFIL (TIDAK UBAH UI, HANYA LOGIC) */}
+                                    {getPhotoUrl() ? (
                                         <img
-                                            src={userData.photo_profil}
+                                            src={getPhotoUrl()}
                                             alt="User Avatar"
                                             className="rounded-circle me-2"
                                             style={{ width: '35px', height: '35px', objectFit: "cover" }}
@@ -116,19 +126,30 @@ const ProfileCustomer = () => {
 
                         <div className="d-flex align-items-start">
                             <div className="align-self-stretch bg-light">
+
                             {/* FOTO PROFIL BESAR */}
-                            {userData?.photo_profil ? (
+                            {getPhotoUrl() ? (
                                 <img 
-                                    src={userData.photo_profil}
+                                    src={getPhotoUrl()}
                                     alt="Profile Picture" 
-                                    className="rounded-3 me-5"
+                                    className="rounded-3 me-0"
                                     style={{ width: '120px', height: '160px', objectFit: 'cover' }}
                                 />
                             ) : (
-                                <i
-                                    className="bi bi-person-fill-add text-black-50 me-5"
-                                    style={{ fontSize: "50px" }}
-                                ></i>
+                                <div 
+                                    className="d-flex justify-content-center align-items-center rounded-3 me-2"
+                                    style={{
+                                        width: "120px",
+                                        height: "160px",
+                                        backgroundColor: "#f8f9fa"
+                                    }}
+                                >
+                                    <i
+                                        className="bi bi-person-fill-add text-black-50"
+                                        style={{ fontSize: "50px" }}
+                                    ></i>
+                                </div>
+
                             )}
                             </div>
 

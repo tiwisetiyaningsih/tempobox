@@ -75,7 +75,7 @@ function App() {
           <Route path="/favorite_customer" element={<FavoriteCustomer />} />
           <Route path="/profile_customer" element={<ProfileCustomer />} />
           <Route path='/update_profile_customer' element= {<UpdateProfileCustomer />} />
-          <Route path='/detail_gudang' element= {<DetailGudang />} />
+          <Route path='/detail_gudang/:id' element= {<DetailGudang />} />
           <Route path='/dashboard_admin' element= {<DashboardAdmin />} />
         </Routes>
       </Router>
