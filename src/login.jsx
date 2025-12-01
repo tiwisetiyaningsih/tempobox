@@ -40,7 +40,7 @@ function Login() {
           navigate("/dashboard_customer");
         } 
         else if (data.user.role === "admin") {
-          navigate("/dashboard_admin");
+          navigate("/admin/dashboard");
         } 
         else {
           alert("Role tidak dikenali. Hubungi admin sistem.");
@@ -103,9 +103,6 @@ function Login() {
             <div className="mb-3">
               <div className="d-flex justify-content-between align-items-center">
                 <label className="form-label fw-medium mb-1">Kata Sandi</label>
-                <Link to="/forgot-password" className="small text-decoration-none">
-                  Lupa Kata Sandi?
-                </Link>
               </div>
 
               <div className="input-group border border-secondary rounded">

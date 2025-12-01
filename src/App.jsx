@@ -20,6 +20,7 @@ import ProfileCustomer from './profileCustomer.jsx';
 import UpdateProfileCustomer from './updateProfileCustomer.jsx';
 import DetailGudang from './detailGudang.jsx';
 import DashboardAdmin from './dashboard_admin.jsx';
+import KelolaUsers from './kelola_users.jsx';
 
 function App() {
   return (
@@ -76,7 +77,8 @@ function App() {
           <Route path="/profile_customer" element={<ProfileCustomer />} />
           <Route path='/update_profile_customer' element= {<UpdateProfileCustomer />} />
           <Route path='/detail_gudang/:id' element= {<DetailGudang />} />
-          <Route path='/dashboard_admin' element= {<DashboardAdmin />} />
+          <Route path='/admin/dashboard' element= {<DashboardAdmin />} />
+          <Route path='/kelola_users' element= {<KelolaUsers/>} />
         </Routes>
       </Router>
     </>

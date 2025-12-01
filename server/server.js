@@ -130,6 +130,22 @@ app.get('/users/:id', async (req, res) => {
     }
 });
 
+// ===========================
+// GET ALL USER
+// ===========================
+app.get('/users', async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT * FROM users ORDER BY id DESC
+        `);
+
+        res.json(rows);
+    } catch (error) {
+        console.error("GET USERS ERROR:", error);
+        res.status(500).json({ message: 'Gagal mengambil data user' });
+    }
+});
+
 
 // =============================
 // UPDATE USER + UPLOAD FOTO
@@ -192,6 +208,75 @@ app.put('/users/:id', upload.single("photo_profil"), async (req, res) => {
     } catch (error) {
         console.error("UPDATE PROFILE ERROR:", error);
         res.status(500).json({ message: "Terjadi kesalahan saat update profile." });
+    }
+});
+
+// ==========================================
+// TAMBAH USER
+// ==========================================
+app.post("/users", upload.single("photo_profil"), async (req, res) => {
+    try {
+        const { name, email, phone, role, password } = req.body;
+
+        if (!name || !email || !phone || !role) {
+            return res.status(400).json({ message: "Semua field wajib diisi." });
+        }
+
+        // Cek email duplikat
+        const [exist] = await db.execute(
+            "SELECT id FROM users WHERE email = ?",
+            [email]
+        );
+
+        if (exist.length > 0) {
+            return res.status(400).json({ message: "Email sudah digunakan!" });
+        }
+
+        const hashedPass = await bcrypt.hash(password || "default123", 10);
+
+        // Nama file foto
+        const photoName = req.file ? req.file.filename : null;
+
+        // Insert data user
+        const [result] = await db.execute(
+            `INSERT INTO users (name, email, phone, role, password, photo_profil)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [name, email, phone, role, hashedPass, photoName]
+        );
+
+        const createdId = result.insertId;
+
+        // Ambil kembali user yang baru dibuat
+        const [newUser] = await db.execute(
+            "SELECT id, name, email, phone, role, photo_profil FROM users WHERE id = ?",
+            [createdId]
+        );
+
+        res.json({
+            message: "User berhasil ditambahkan!",
+            user: newUser[0]
+        });
+
+    } catch (error) {
+        console.error("ADD USER ERROR:", error);
+        res.status(500).json({ message: "Gagal menambahkan user." });
+    }
+});
+
+
+
+// DELETE USER
+app.delete("/users/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        await db.execute(`DELETE FROM users WHERE id=?`, [id]);
+
+        res.json({ message: "User berhasil dihapus" });
+
+    } catch (error) {
+        console.error("DELETE USER ERROR:", error);
+        res.status(500).json({ message: "Gagal menghapus user." });
     }
 });
 

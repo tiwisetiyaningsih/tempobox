@@ -71,7 +71,7 @@ function DashboardAdmin() {
           </Link>
 
           <Link 
-            to="#" 
+            to="/kelola_users" 
             className={`nav-link text-dark py-2 d-flex align-items-center gap-2 ${activeMenu === 'Kelola User' ? 'active-menu' : ''}`}
             onClick={() => setActiveMenu('Kelola User')}
           >
@@ -114,13 +114,6 @@ function DashboardAdmin() {
             <div>
               <h3>Kelola Gudang</h3>
               <p>Daftar gudang dan opsi untuk menambah, mengedit, atau menghapus.</p>
-            </div>
-          )}
-
-          {activeMenu === 'Kelola User' && (
-            <div>
-              <h3>Kelola User</h3>
-              <p>Daftar pengguna terdaftar dan opsi manajemen.</p>
             </div>
           )}
         </div>
