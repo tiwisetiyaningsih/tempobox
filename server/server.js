@@ -470,6 +470,99 @@ app.delete('/favorite/:id_user/:id_gudang', async (req, res) => {
     }
 });
 
+// =====================================================
+// ================ CRUD IKLAN ========================
+// =====================================================
+
+// GET ALL IKLAN (JOIN dengan admin & gudang, termasuk semua data gudang)
+app.get('/iklan', async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT 
+                i.id, i.id_admin, u.name AS nama_admin,
+                i.id_gudang, 
+                g.nama AS nama_gudang,
+                g.lokasi, g.harga, g.status,
+                g.per, g.luas, g.fasilitas,
+                g.gambar_1, g.gambar_2, g.gambar_3,
+                i.created_at, i.updated_at
+            FROM iklan i
+            JOIN users u ON i.id_admin = u.id
+            JOIN gudang g ON i.id_gudang = g.id
+            ORDER BY i.id DESC
+        `);
+        res.json(rows);
+    } catch (error) {
+        console.error("GET IKLAN ERROR:", error);
+        res.status(500).json({ message: 'Gagal mengambil data iklan.' });
+    }
+});
+
+
+// GET IKLAN BY ID
+app.get('/iklan/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [rows] = await db.execute(`
+            SELECT i.id, i.id_admin, u.name AS nama_admin,
+                   i.id_gudang, g.nama AS nama_gudang,
+                   i.created_at, i.updated_at
+            FROM iklan i
+            JOIN users u ON i.id_admin = u.id
+            JOIN gudang g ON i.id_gudang = g.id
+            WHERE i.id = ?
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Iklan tidak ditemukan.' });
+        }
+
+        res.json(rows[0]);
+    } catch (error) {
+        console.error("GET IKLAN BY ID ERROR:", error);
+        res.status(500).json({ message: 'Gagal mengambil data iklan.' });
+    }
+});
+
+// CREATE IKLAN
+app.post('/iklan', async (req, res) => {
+    try {
+        const { id_admin, id_gudang } = req.body;
+
+        if (!id_admin || !id_gudang) {
+            return res.status(400).json({ message: 'id_admin dan id_gudang wajib diisi.' });
+        }
+
+        const [result] = await db.execute(`
+            INSERT INTO iklan (id_admin, id_gudang, created_at, updated_at)
+            VALUES (?, ?, NOW(), NOW())
+        `, [id_admin, id_gudang]);
+
+        res.status(201).json({ message: 'Iklan berhasil ditambahkan.', id: result.insertId });
+    } catch (error) {
+        console.error("CREATE IKLAN ERROR:", error);
+        res.status(500).json({ message: 'Gagal menambahkan iklan.' });
+    }
+});
+
+
+// DELETE IKLAN
+app.delete('/iklan/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [result] = await db.execute(`DELETE FROM iklan WHERE id = ?`, [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Iklan tidak ditemukan.' });
+        }
+
+        res.json({ message: 'Iklan berhasil dihapus.' });
+    } catch (error) {
+        console.error("DELETE IKLAN ERROR:", error);
+        res.status(500).json({ message: 'Gagal menghapus iklan.' });
+    }
+});
 
 
 app.listen(port, () => {

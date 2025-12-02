@@ -1,37 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './DashboardAdmin.css'; 
 import logoTempoBox from './assets/Logo.svg';
+
 
 function DashboardAdmin() {
   const navigate = useNavigate();
 
-  const [adminInfo, setAdminInfo] = useState({
-    name: '',
-    email: ''
-  });
-
+  const [adminInfo, setAdminInfo] = useState({ name: '', email: '' });
   const [activeMenu, setActiveMenu] = useState('Dashboard');
+  const [gudang, setGudang] = useState([]);
+  const [iklan, setIklan] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
     if (storedUser) {
       const userData = JSON.parse(storedUser);
-
-      // Jika role bukan admin, kembalikan ke login
-      if (userData.role !== "admin") {
-        navigate("/login");
-        return;
-      }
-
-      setAdminInfo({
-        name: userData.name,
-        email: userData.email
-      });
+      if (userData.role !== "admin") navigate("/login");
+      setAdminInfo({ name: userData.name, email: userData.email });
     } else {
       navigate("/login");
     }
+
+    fetchData();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -43,6 +38,48 @@ function DashboardAdmin() {
     localStorage.removeItem("user"); 
     navigate('/beranda');
   };
+
+  const fetchData = async () => {
+    try {
+      const [gudangRes, iklanRes] = await Promise.all([
+        axios.get("http://localhost:3001/gudang"),
+        axios.get("http://localhost:3001/iklan")
+      ]);
+      setGudang(gudangRes.data);
+      setIklan(iklanRes.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleTambahIklan = async (idGudang) => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      await axios.post("http://localhost:3001/iklan", {
+        id_admin: storedUser.id,
+        id_gudang: idGudang
+      });
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleHapusIklan = async (idIklan) => {
+    try {
+      await axios.delete(`http://localhost:3001/iklan/${idIklan}`);
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const jumlahIklan = iklan.length;
+  const jumlahTersedia = gudang.filter(g => g.status === "Tersedia").length;
+  const jumlahTerisi = gudang.filter(g => g.status === "Terisi").length;
+
+  const filteredGudang = gudang.filter(g => g.nama.toLowerCase().includes(searchTerm.toLowerCase()));
+
 
   return (
     <div className="d-flex admin-dashboard-container vh-100">
@@ -103,19 +140,81 @@ function DashboardAdmin() {
 
         {/* CONTENT AREA */}
         <div className="content-area p-4 flex-grow-1">
-          {activeMenu === 'Dashboard' && (
-            <div>
-              <h3>Selamat Datang, {adminInfo.name}</h3>
-              <p>Ini adalah area ringkasan untuk administrator TempoBox.</p>
-            </div>
-          )}
+          <div>
+            <h3>Selamat Datang, {adminInfo.name}</h3>
+            <p>Ini adalah area ringkasan untuk administrator TempoBox.</p>
+          </div>
 
-          {activeMenu === 'Kelola Gudang' && (
-            <div>
-              <h3>Kelola Gudang</h3>
-              <p>Daftar gudang dan opsi untuk menambah, mengedit, atau menghapus.</p>
+          {/* KOTAK JUMLAH IKLAN, JUMLAH GUDANG TERSEDIA, JUMLAH GUDANG TERISI*/}
+          <div className="row mb-4">
+            <div className="col-md-4">
+              <div className="card text-center bg-primary text-white p-3">
+                <h5>Jumlah Iklan</h5>
+                <h3>{jumlahIklan}</h3>
+              </div>
             </div>
-          )}
+            <div className="col-md-4">
+              <div className="card text-center bg-success text-white p-3">
+                <h5>Gudang Tersedia</h5>
+                <h3>{jumlahTersedia}</h3>
+              </div>
+            </div>
+            <div className="col-md-4">
+              <div className="card text-center bg-danger text-white p-3">
+                <h5>Gudang Terisi</h5>
+                <h3>{jumlahTerisi}</h3>
+              </div>
+            </div>
+          </div>
+
+          {/* FILTER / SEARCH BY NAMA GUDANG */}
+          <div className="mb-3">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Cari nama gudang..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* TABEL DAFTAR GUDANG YANG BISA DITAMBAHKAN JADI IKLAN */}
+          <div className="table-responsive">
+            <table className="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Nama Gudang</th>
+                  <th>Lokasi</th>
+                  <th>Harga</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredGudang.map((g, index) => {
+                  const iklanData = iklan.find(i => i.id_gudang === g.id);
+                  return (
+                    <tr key={g.id}>
+                      <td>{index + 1}</td>
+                      <td>{g.nama}</td>
+                      <td>{g.lokasi}</td>
+                      <td>{g.harga}</td>
+                      <td style={{ color: g.status==='Tersedia'?'green':'red' }}>{g.status}</td>
+                      <td>
+                        {iklanData ? (
+                          <button className="btn btn-danger btn-sm" onClick={()=>handleHapusIklan(iklanData.id)}>Hapus Iklan</button>
+                        ) : (
+                          <button className="btn btn-primary btn-sm" onClick={()=>handleTambahIklan(g.id)}>Tambah Iklan</button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
         </div>
 
       </div>
