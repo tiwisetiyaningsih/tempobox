@@ -13,16 +13,23 @@ app.use(bodyParser.json());
 const multer = require("multer");
 const path = require("path");
 
+// ========================
+// MULTER CONFIG
+// ========================
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, "uploads/");   // pastikan folder /uploads ADA
-    },
-    filename: (req, file, cb) => {
-      cb(null, Date.now() + path.extname(file.originalname));
-    }
-  });
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // pastikan folder uploads ADA
+  },
+  filename: function (req, file, cb) {
+    const uniqueName =
+      Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueName + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage: storage });
+
   
-  const upload = multer({ storage: storage });
   
 
 // -------------------------------------------------------------------
@@ -116,7 +123,11 @@ app.get("/gudang", async (req, res) => {
 // -------------------------------------------------------------------
 // POST DATA GUDANG
 // -------------------------------------------------------------------
-  app.post("/gudang", upload.single("foto"), async (req, res) => {
+  app.post("/gudang", upload.fields([
+    { name: "gambar_1", maxCount: 1 },
+    { name: "gambar_2", maxCount: 1 },
+    { name: "gambar_3", maxCount: 1 },
+  ]), async (req, res) => {
     try {
       const {
         nama,
@@ -128,16 +139,20 @@ app.get("/gudang", async (req, res) => {
         deskripsi
       } = req.body;
   
-      const foto = req.file ? req.file.filename : null;
+      const gambar1 = req.files?.gambar_1?.[0]?.filename || null;
+      const gambar2 = req.files?.gambar_2?.[0]?.filename || null;
+      const gambar3 = req.files?.gambar_3?.[0]?.filename || null;
   
       const sql = `
         INSERT INTO gudang 
-        (foto, nama, deskripsi, lokasi, harga, per, luas, fasilitas, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Tersedia')
+        (gambar_1, gambar_2, gambar_3, nama, deskripsi, lokasi, harga, per, luas, fasilitas, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Tersedia')
       `;
-  
+    
       await db.execute(sql, [
-        foto,
+        gambar1,
+        gambar2,
+        gambar3,
         nama,
         deskripsi,
         lokasi,
@@ -177,44 +192,53 @@ app.get("/gudang", async (req, res) => {
 // -------------------------------------------------------------------
 // UPDATE DATA GUDANG 
 // -------------------------------------------------------------------
-  app.put("/gudang/:id", upload.single("foto"), async (req, res) => {
+  app.put("/gudang/:id", upload.fields([
+    { name: "gambar_1", maxCount: 1 },
+    { name: "gambar_2", maxCount: 1 },
+    { name: "gambar_3", maxCount: 1 },
+  ]), async (req, res) => {
     try {
       const { id } = req.params;
-      const { nama, lokasi, harga, per, luas, fasilitas, deskripsi, foto_lama } = req.body;
+      const { nama, lokasi, harga, per, luas, fasilitas, deskripsi, gambar_1_lama, gambar_2_lama, gambar_3_lama } = req.body;
   
-      const foto = req.file ? req.file.filename : foto_lama;
+      const gambar1 = req.files?.gambar_1?.[0]?.filename || gambar_1_lama;
+      const gambar2 = req.files?.gambar_2?.[0]?.filename || gambar_2_lama;
+      const gambar3 = req.files?.gambar_3?.[0]?.filename || gambar_3_lama;
   
       const sql = `
-        UPDATE gudang SET 
-        nama=?, lokasi=?, harga=?, per=?, luas=?, fasilitas=?, deskripsi=?, foto=?
-        WHERE id=?
-      `;
+      UPDATE gudang SET 
+      nama=?, lokasi=?, harga=?, per=?, luas=?, fasilitas=?, deskripsi=?,
+      gambar_1=?, gambar_2=?, gambar_3=?
+      WHERE id=?
+    `;
+
+    await db.execute(sql, [
+      nama,
+      lokasi,
+      harga,
+      per,
+      luas,
+      fasilitas,
+      deskripsi,
+      gambar1,
+      gambar2,
+      gambar3,
+      id
+    ]);
   
-      await db.execute(sql, [
-        nama,
-        lokasi,
-        harga,
-        per,
-        luas,
-        fasilitas,
-        deskripsi,
-        foto,
-        id,
-      ]);
-  
-      return res.status(200).json({
-        success: true,
-        message: "Gudang berhasil diperbarui",
-      });
-  
-    } catch (error) {
-      console.error("PUT ERROR:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Terjadi kesalahan server",
-      });
-    }
-  });
+    res.status(200).json({
+      success: true,
+      message: "Gudang berhasil diperbarui",
+    });
+
+  } catch (error) {
+    console.error("PUT ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan server",
+    });
+  }
+});
 
 // ===========================
 // GET USER BY ID
@@ -257,123 +281,139 @@ app.get('/users', async (req, res) => {
 });
 
 
-// -------------------------------------------------------------------
-// UPDATE DATA USER
-// -------------------------------------------------------------------
+// =============================
+// UPDATE USER + UPLOAD FOTO
+// =============================
 app.put('/users/:id', upload.single("photo_profil"), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, email, phone, password } = req.body;
+  try {
+      const { id } = req.params;
+      const { name, email, phone, password } = req.body;
 
-        const removePhoto = req.body.removePhoto;
+      // PERHATIKAN: removePhoto HARUS dicek pakai req.body TANPA strict compare
+      const removePhoto = req.body.removePhoto;
 
-        let newPhotoUrl = null;
+      let newPhotoUrl = null;
 
-        if (req.file) {
+      // Jika upload foto baru
+      if (req.file) {
           newPhotoUrl = `http://localhost:${port}/uploads/${req.file.filename}`;
-        }
+      }
 
-        const [oldUserRows] = await db.execute(
-            'SELECT password, photo_profil FROM users WHERE id = ?',
-            [id]
-        );
-        if (oldUserRows.length === 0) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
-        }
+      // Ambil data user lama
+      const [oldUserRows] = await db.execute(
+          'SELECT password, photo_profil FROM users WHERE id = ?',
+          [id]
+      );
+      if (oldUserRows.length === 0) {
+          return res.status(404).json({ message: "User tidak ditemukan" });
+      }
 
-        const oldUser = oldUserRows[0];
+      const oldUser = oldUserRows[0];
 
-        let finalPassword = oldUser.password;
-        if (password && password.trim() !== "") {
-            finalPassword = await bcrypt.hash(password, 10);
-        }
+      // Password
+      let finalPassword = oldUser.password;
+      if (password && password.trim() !== "") {
+          finalPassword = await bcrypt.hash(password, 10);
+      }
 
-        let finalPhoto = oldUser.photo_profil;
+      // Foto profil
+      let finalPhoto = oldUser.photo_profil;
 
-        if (removePhoto == "true") {       
-            finalPhoto = null;
-        }
+      // ---- PRIORITY: hapus foto ----
+      if (removePhoto == "true") {       // pakai == biar fleksibel
+          finalPhoto = null;
+      }
 
-        if (newPhotoUrl) {
-            finalPhoto = newPhotoUrl;
-        }
+      // ---- Upload foto baru override hapus ----
+      if (newPhotoUrl) {
+          finalPhoto = newPhotoUrl;
+      }
 
-        await db.execute(
-            `UPDATE users 
-             SET name=?, email=?, phone=?, password=?, photo_profil=?
-             WHERE id=?`,
-            [name, email, phone, finalPassword, finalPhoto, id]
-        );
+      // Update DB
+      await db.execute(
+          `UPDATE users 
+           SET name=?, email=?, phone=?, password=?, photo_profil=?
+           WHERE id=?`,
+          [name, email, phone, finalPassword, finalPhoto, id]
+      );
 
-        res.json({ message: "Profile berhasil diupdate." });
+      res.json({ message: "Profile berhasil diupdate." });
 
-    } catch (error) {
-        console.error("UPDATE PROFILE ERROR:", error);
-        res.status(500).json({ message: "Terjadi kesalahan saat update profile." });
-    }
+  } catch (error) {
+      console.error("UPDATE PROFILE ERROR:", error);
+      res.status(500).json({ message: "Terjadi kesalahan saat update profile." });
+  }
 });
 
-// -------------------------------------------------------------------
+// ==========================================
 // TAMBAH USER
-// -------------------------------------------------------------------
+// ==========================================
 app.post("/users", upload.single("photo_profil"), async (req, res) => {
-    try {
-        const { name, email, phone, role, password } = req.body;
+  try {
+      const { name, email, phone, role, password } = req.body;
 
-        if (!name || !email || !phone || !role) {
-            return res.status(400).json({ message: "Semua field wajib diisi." });
-        }
+      if (!name || !email || !phone || !role) {
+          return res.status(400).json({ message: "Semua field wajib diisi." });
+      }
 
-        // Cek email duplikat
-        const [exist] = await db.execute(
-            "SELECT id FROM users WHERE email = ?",
-            [email]
-        );
+      // Cek email duplikat
+      const [exist] = await db.execute(
+          "SELECT id FROM users WHERE email = ?",
+          [email]
+      );
 
-        if (exist.length > 0) {
-            return res.status(400).json({ message: "Email sudah digunakan!" });
-        }
+      if (exist.length > 0) {
+          return res.status(400).json({ message: "Email sudah digunakan!" });
+      }
 
-        const hashedPass = await bcrypt.hash(password || "default123", 10);
+      const hashedPass = await bcrypt.hash(password || "default123", 10);
 
-        const photoName = req.file ? req.file.filename : null;
+      // Nama file foto
+      const photoName = req.file ? req.file.filename : null;
 
-        const [result] = await db.execute(
-            `INSERT INTO users (name, email, phone, role, password, photo_profil)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [name, email, phone, role, hashedPass, photoName]
-        );
+      // Insert data user
+      const [result] = await db.execute(
+          `INSERT INTO users (name, email, phone, role, password, photo_profil)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [name, email, phone, role, hashedPass, photoName]
+      );
 
-        const createdId = result.insertId;
+      const createdId = result.insertId;
 
-        const [newUser] = await db.execute(
-            "SELECT id, name, email, phone, role, photo_profil FROM users WHERE id = ?",
-            [createdId]
-        );
+      // Ambil kembali user yang baru dibuat
+      const [newUser] = await db.execute(
+          "SELECT id, name, email, phone, role, photo_profil FROM users WHERE id = ?",
+          [createdId]
+      );
 
-        res.json({
-            message: "User berhasil ditambahkan!",
-            user: newUser[0]
-        });
+      res.json({
+          message: "User berhasil ditambahkan!",
+          user: newUser[0]
+      });
 
-    } catch (error) {
-        console.error("ADD USER ERROR:", error);
-        res.status(500).json({ message: "Gagal menambahkan user." });
-    }
+  } catch (error) {
+      console.error("ADD USER ERROR:", error);
+      res.status(500).json({ message: "Gagal menambahkan user." });
+  }
 });
 
-// -------------------------------------------------------------------
+
+
 // DELETE USER
-// -------------------------------------------------------------------
 app.delete("/users/:id", async (req, res) => {
-    try {
-      await db.execute("DELETE FROM users WHERE id=?", [req.params.id]);
+  try {
+      const { id } = req.params;
+
+      await db.execute(`DELETE FROM users WHERE id=?`, [id]);
+
       res.json({ message: "User berhasil dihapus" });
-    } catch (err) {
-      console.error("DELETE USER ERROR:", err);
-      res.status(500).json({ message: "Gagal menghapus user" });
-    }
-  });
+
+  } catch (error) {
+      console.error("DELETE USER ERROR:", error);
+      res.status(500).json({ message: "Gagal menghapus user." });
+  }
+});
+
 
 
 // -------------------------------------------------------------------
@@ -393,22 +433,22 @@ app.get("/iklan", async (req, res) => {
         gudang.per,
         gudang.luas,
         gudang.fasilitas,
-        gudang.foto,
+        gudang.gambar_1,
+        gudang.gambar_2,
+        gudang.gambar_3,
         gudang.status
       FROM iklan
       JOIN gudang ON iklan.id_gudang = gudang.id
     `);
 
-    return res.status(200).json(rows);
+    res.status(200).json(rows);
 
   } catch (error) {
     console.error("GET IKLAN ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Gagal mengambil data iklan."
-    });
+    res.status(500).json({ message: "Gagal mengambil data iklan." });
   }
 });
+
 
 
 // -------------------------------------------------------------------
@@ -512,4 +552,3 @@ app.delete('/iklan/:id', async (req, res) => {
   app.listen(port, () => {
     console.log(`Server berjalan di http://localhost:${port}`);
   });
-  
