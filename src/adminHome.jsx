@@ -1,0 +1,186 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import logoTempoBox from './assets/Logo.svg';
+import "./AdminHome.css";
+
+
+function AdminHome() {
+  const navigate = useNavigate();
+
+  const [adminInfo, setAdminInfo] = useState({ name: '', email: '' });
+  const [activeMenu, setActiveMenu] = useState('Dashboard');
+  const [gudang, setGudang] = useState([]);
+  const [iklan, setIklan] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      if (userData.role !== "admin") navigate("/login");
+      setAdminInfo({ name: userData.name, email: userData.email });
+    } else {
+      navigate("/login");
+    }
+
+    fetchData();
+  }, [navigate]);
+
+  const fetchData = async () => {
+    try {
+      const [gudangRes, iklanRes] = await Promise.all([
+        axios.get("http://localhost:3001/gudang"),
+        axios.get("http://localhost:3001/iklan")
+      ]);
+      setGudang(gudangRes.data);
+      setIklan(iklanRes.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleTambahIklan = async (idGudang) => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      await axios.post("http://localhost:3001/iklan", {
+        id_admin: storedUser.id,
+        id_gudang: idGudang
+      });
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleHapusIklan = async (idIklan) => {
+    try {
+      await axios.delete(`http://localhost:3001/iklan/${idIklan}`);
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const jumlahIklan = iklan.length;
+  const jumlahTersedia = gudang.filter(g => g.status === "Tersedia").length;
+  const jumlahTerisi = gudang.filter(g => g.status === "Terisi").length;
+
+  const filteredGudang = gudang.filter(g => g.nama.toLowerCase().includes(searchTerm.toLowerCase()));
+
+
+  return (
+    <div className="container-fluid">
+      
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        {/* CONTENT AREA */}
+        <div>
+          <h3 className="fw-medium">Selamat Datang, {adminInfo.name}</h3>
+          <p className="text-muted">
+            Ini adalah area ringkasan untuk administrator TempoBox.
+          </p>
+        </div>
+      </div>
+  
+      {/* KOTAK JUMLAH IKLAN, JUMLAH GUDANG TERSEDIA, JUMLAH GUDANG TERISI */}
+      <div className="row mb-4">
+        <div className="col-md-4">
+          <div className="card text-center bg-primary text-white p-3">
+            <h5>Jumlah Iklan</h5>
+            <h3 style={{ color: "#FFFFFF" }}>{jumlahIklan}</h3>
+          </div>
+        </div>
+  
+        <div className="col-md-4">
+          <div className="card text-center bg-success text-white p-3">
+            <h5>Gudang Tersedia</h5>
+            <h3 style={{ color: "#FFFFFF" }}>{jumlahTersedia}</h3>
+          </div>
+        </div>
+  
+        <div className="col-md-4">
+          <div className="card text-center bg-danger text-white p-3">
+            <h5>Gudang Terisi</h5>
+            <h3 style={{ color: "#FFFFFF" }}>{jumlahTerisi}</h3>
+          </div>
+        </div>
+      </div>
+  
+      {/* FILTER / SEARCH */}
+      <div className="kotak-putih shadow-sm mb-4 d-flex flex-wrap gap-3 justify-content-between">
+        <div className="kotak-abu d-flex align-items-center flex-grow-1">
+          <i style={{ marginLeft: "5px" }} className="bi bi-search me-1 text-muted"></i>
+          <input
+            type="text"
+            className="form-control border-0 bg-transparent"
+            placeholder="Cari nama gudang..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+  
+        <div className="kotak-abu d-flex align-items-center">
+          <span style={{ marginLeft: "5px" }} className="fw-medium text-dark">
+            {filteredGudang.length} Gudang ditemukan
+          </span>
+        </div>
+      </div>
+  
+      {/* TABEL */}
+      <div className="table-container">
+        <div className="table-scroll-wrapper">
+          <table className="table custom-table align-middle table-hover">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Nama Gudang</th>
+                <th>Lokasi</th>
+                <th>Harga</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredGudang.map((g, index) => {
+                const iklanData = iklan.find(i => i.id_gudang === g.id);
+                return (
+                  <tr key={g.id}>
+                    <td className='isi-center'>{index + 1}</td>
+                    <td style={{textAlign:"left"}}>{g.nama}</td>
+                    <td style={{textAlign:"left"}}>{g.lokasi}</td>
+                    <td style={{textAlign:"left"}} className="col-harga col-deskripsi">Rp {Number(g.harga).toLocaleString()}</td>
+                    <td style={{ color: g.status === 'Tersedia' ? 'green' : 'red' }}>
+                      {g.status}
+                    </td>
+                    <td>
+                      {iklanData ? (
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleHapusIklan(iklanData.id)}
+                        >
+                          Hapus Iklan
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleTambahIklan(g.id)}
+                        >
+                          Tambah Iklan
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+  
+    </div>
+  );
+}  
+
+export default AdminHome;

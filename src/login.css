@@ -1,0 +1,38 @@
+
+.login-page-split {
+  min-height: 100vh;
+}
+
+.login-left-col {
+  background-image: linear-gradient(rgba(25, 122, 255, 0.6), rgba(25, 122, 255, 0.6)), url('./assets/gudang-bg.svg');
+  background-size: cover;
+  background-position: center;
+  color: white;
+}
+
+.login-right-col {
+  background-color: #ffffff;
+}
+
+.bi-chevron-left::before {
+  content: "\f273";
+}
+
+.login-form-container {
+  max-width: 400px;
+  padding: 20px;
+}
+
+
+/* Menghilangkan icon bawaan Edge/Chrome */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none;
+  opacity: 0;
+}

@@ -1,70 +1,515 @@
 const express = require('express');
-const mysql = require('mysql');
-const cors = require('cors');
-const bcrypt = require('bcrypt');
-
+const bodyParser = require('body-parser');
 const app = express();
+app.use(express.urlencoded({ extended: true }));
+const bcrypt = require('bcrypt');
+const cors = require('cors'); 
+const db = require('./db'); 
+
+const port = 3001; 
+
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
+const multer = require("multer");
+const path = require("path");
 
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'tempobox'
-});
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, "uploads/");   // pastikan folder /uploads ADA
+    },
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + path.extname(file.originalname));
+    }
+  });
+  
+  const upload = multer({ storage: storage });
+  
 
-db.connect(err => {
-  if (err) throw err;
-  console.log('Terhubung ke database tempobox');
-});
-
+// -------------------------------------------------------------------
+// Endpoint Register 
+// -------------------------------------------------------------------
 app.post('/register', async (req, res) => {
-  const { fullName, email, phone, password } = req.body;
+    console.log('--- ATTEMPT: REGISTER ---');
+    const { name, email, phone, password } = req.body;
 
-  try {
-    // Enkripsi password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const sql = 'INSERT INTO users (nama, email, phone, password) VALUES (?, ?, ?, ?)';
-    db.query(sql, [fullName, email, phone, hashedPassword], (err, result) => {
-      if (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-          return res.json({ message: 'Email sudah terdaftar' });
+    try {
+        const [rows] = await db.execute('SELECT email FROM users WHERE email = ?', [email]);
+        if (rows.length > 0) {
+            return res.status(409).json({ message: 'Email sudah terdaftar.' });
         }
-        return res.status(500).json({ message: 'Gagal mendaftar' });
-      }
-      res.json({ message: 'Registrasi berhasil' });
-    });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const sql = `
+            INSERT INTO users (name, email, phone, password, role, photo_profil)
+            VALUES (?, ?, ?, ?, 'user', NULL)
+        `;
+        await db.execute(sql, [name, email, phone, hashedPassword]);
+
+        res.status(201).json({ message: 'Pendaftaran berhasil! Silakan masuk.' });
+
+    } catch (error) {
+        console.error("REGISTER ERROR:", error);
+        res.status(500).json({ message: 'Terjadi kesalahan server saat pendaftaran.' });
+    }
+});
+
+
+// -------------------------------------------------------------------
+// Endpoint Login 
+// -------------------------------------------------------------------
+app.post('/login', async (req, res) => {
+    console.log('--- ATTEMPT: LOGIN RECEIVED ---');
+    const { email, password } = req.body;
+
+    try {
+        // Tambahkan role dan photo_profil
+        const [rows] = await db.execute(
+            'SELECT id, name, email, password, phone, role, photo_profil FROM users WHERE email = ?',
+            [email]
+        );
+        
+        if (rows.length === 0) {
+            return res.status(401).json({ message: 'Email atau kata sandi salah.' });
+        }
+
+        const user = rows[0];
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Email atau kata sandi salah.' });
+        }
+
+        const safeUser = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            role: user.role,               
+            photo_profil: user.photo_profil 
+        };
+        
+        res.status(200).json({
+            message: 'Login berhasil',
+            user: safeUser,
+        });
+
+    } catch (error) {
+        console.error("LOGIN ERROR:", error);
+        res.status(500).json({ message: 'Terjadi kesalahan server saat login.' });
+    }
+});
+
+// -------------------------------------------------------------------
+// GET DATA GUDANG 
+// -------------------------------------------------------------------
+app.get("/gudang", async (req, res) => {
+  try {
+    const [rows] = await db.execute("SELECT * FROM gudang");
+    res.status(200).json(rows);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Terjadi kesalahan saat mengenkripsi password' });
+    console.error("ERROR GET GUDANG:", error);
+    res.status(500).json({ message: "Gagal mengambil data gudang" });
+  }
+});
+  
+// -------------------------------------------------------------------
+// POST DATA GUDANG
+// -------------------------------------------------------------------
+  app.post("/gudang", upload.single("foto"), async (req, res) => {
+    try {
+      const {
+        nama,
+        lokasi,
+        harga,
+        per,
+        luas,
+        fasilitas,
+        deskripsi
+      } = req.body;
+  
+      const foto = req.file ? req.file.filename : null;
+  
+      const sql = `
+        INSERT INTO gudang 
+        (foto, nama, deskripsi, lokasi, harga, per, luas, fasilitas, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Tersedia')
+      `;
+  
+      await db.execute(sql, [
+        foto,
+        nama,
+        deskripsi,
+        lokasi,
+        harga,
+        per,
+        luas,
+        fasilitas
+      ]);
+  
+      res.status(201).json({ message: "Gudang berhasil ditambahkan" });
+  
+    } catch (error) {
+      console.error("ERROR POST GUDANG:", error);
+      res.status(500).json({ message: "Terjadi kesalahan server" });
+    }
+  });
+
+// -------------------------------------------------------------------
+// Simpan Foto di Folder /uploads
+// -------------------------------------------------------------------
+  app.use("/uploads", express.static("uploads"));
+  
+
+// -------------------------------------------------------------------
+// DELETE DATA GUDANG
+// -------------------------------------------------------------------
+  app.delete("/gudang/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await db.execute("DELETE FROM gudang WHERE id = ?", [id]);
+      res.json({ message: "Gudang berhasil dihapus" });
+    } catch (err) {
+      res.status(500).json({ message: "Gagal menghapus gudang" });
+    }
+  });
+
+// -------------------------------------------------------------------
+// UPDATE DATA GUDANG 
+// -------------------------------------------------------------------
+  app.put("/gudang/:id", upload.single("foto"), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { nama, lokasi, harga, per, luas, fasilitas, deskripsi, foto_lama } = req.body;
+  
+      const foto = req.file ? req.file.filename : foto_lama;
+  
+      const sql = `
+        UPDATE gudang SET 
+        nama=?, lokasi=?, harga=?, per=?, luas=?, fasilitas=?, deskripsi=?, foto=?
+        WHERE id=?
+      `;
+  
+      await db.execute(sql, [
+        nama,
+        lokasi,
+        harga,
+        per,
+        luas,
+        fasilitas,
+        deskripsi,
+        foto,
+        id,
+      ]);
+  
+      return res.status(200).json({
+        success: true,
+        message: "Gudang berhasil diperbarui",
+      });
+  
+    } catch (error) {
+      console.error("PUT ERROR:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Terjadi kesalahan server",
+      });
+    }
+  });
+
+// ===========================
+// GET USER BY ID
+// ===========================
+app.get('/users/:id', async (req, res) => {
+  try {
+      const { id } = req.params;
+
+      const [rows] = await db.execute(
+          `SELECT * FROM users WHERE id = ?`,
+          [id]
+      );
+
+      if (rows.length === 0) {
+          return res.status(404).json({ message: "User tidak ditemukan." });
+      }
+
+      res.json(rows[0]);
+
+  } catch (error) {
+      console.error("GET USER ERROR:", error);
+      res.status(500).json({ message: "Gagal mengambil data user." });
   }
 });
 
-app.post('/login', (req, res) => {
-  const { email, password } = req.body;
+// ===========================
+// GET ALL USER
+// ===========================
+app.get('/users', async (req, res) => {
+  try {
+      const [rows] = await db.execute(`
+          SELECT * FROM users ORDER BY id DESC
+      `);
 
-  const sql = 'SELECT * FROM users WHERE email = ?';
-  db.query(sql, [email], async (err, results) => {
-    if (err) return res.status(500).json({ message: 'Terjadi kesalahan server' });
-    if (results.length === 0) return res.json({ message: 'Email tidak ditemukan' });
-
-    const user = results[0];
-
-    console.log("Login attempt:", email);
-    console.log("Password input:", password);
-    console.log("Password in DB:", user.password);
+      res.json(rows);
+  } catch (error) {
+      console.error("GET USERS ERROR:", error);
+      res.status(500).json({ message: 'Gagal mengambil data user' });
+  }
+});
 
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.json({ message: 'Password salah' });
+// -------------------------------------------------------------------
+// UPDATE DATA USER
+// -------------------------------------------------------------------
+app.put('/users/:id', upload.single("photo_profil"), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, email, phone, password } = req.body;
 
-    res.json({ message: 'Login berhasil', user: { id: user.id, nama: user.nama, email: user.email } });
+        const removePhoto = req.body.removePhoto;
+
+        let newPhotoUrl = null;
+
+        if (req.file) {
+          newPhotoUrl = `http://localhost:${port}/uploads/${req.file.filename}`;
+        }
+
+        const [oldUserRows] = await db.execute(
+            'SELECT password, photo_profil FROM users WHERE id = ?',
+            [id]
+        );
+        if (oldUserRows.length === 0) {
+            return res.status(404).json({ message: "User tidak ditemukan" });
+        }
+
+        const oldUser = oldUserRows[0];
+
+        let finalPassword = oldUser.password;
+        if (password && password.trim() !== "") {
+            finalPassword = await bcrypt.hash(password, 10);
+        }
+
+        let finalPhoto = oldUser.photo_profil;
+
+        if (removePhoto == "true") {       
+            finalPhoto = null;
+        }
+
+        if (newPhotoUrl) {
+            finalPhoto = newPhotoUrl;
+        }
+
+        await db.execute(
+            `UPDATE users 
+             SET name=?, email=?, phone=?, password=?, photo_profil=?
+             WHERE id=?`,
+            [name, email, phone, finalPassword, finalPhoto, id]
+        );
+
+        res.json({ message: "Profile berhasil diupdate." });
+
+    } catch (error) {
+        console.error("UPDATE PROFILE ERROR:", error);
+        res.status(500).json({ message: "Terjadi kesalahan saat update profile." });
+    }
+});
+
+// -------------------------------------------------------------------
+// TAMBAH USER
+// -------------------------------------------------------------------
+app.post("/users", upload.single("photo_profil"), async (req, res) => {
+    try {
+        const { name, email, phone, role, password } = req.body;
+
+        if (!name || !email || !phone || !role) {
+            return res.status(400).json({ message: "Semua field wajib diisi." });
+        }
+
+        // Cek email duplikat
+        const [exist] = await db.execute(
+            "SELECT id FROM users WHERE email = ?",
+            [email]
+        );
+
+        if (exist.length > 0) {
+            return res.status(400).json({ message: "Email sudah digunakan!" });
+        }
+
+        const hashedPass = await bcrypt.hash(password || "default123", 10);
+
+        const photoName = req.file ? req.file.filename : null;
+
+        const [result] = await db.execute(
+            `INSERT INTO users (name, email, phone, role, password, photo_profil)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [name, email, phone, role, hashedPass, photoName]
+        );
+
+        const createdId = result.insertId;
+
+        const [newUser] = await db.execute(
+            "SELECT id, name, email, phone, role, photo_profil FROM users WHERE id = ?",
+            [createdId]
+        );
+
+        res.json({
+            message: "User berhasil ditambahkan!",
+            user: newUser[0]
+        });
+
+    } catch (error) {
+        console.error("ADD USER ERROR:", error);
+        res.status(500).json({ message: "Gagal menambahkan user." });
+    }
+});
+
+// -------------------------------------------------------------------
+// DELETE USER
+// -------------------------------------------------------------------
+app.delete("/users/:id", async (req, res) => {
+    try {
+      await db.execute("DELETE FROM users WHERE id=?", [req.params.id]);
+      res.json({ message: "User berhasil dihapus" });
+    } catch (err) {
+      console.error("DELETE USER ERROR:", err);
+      res.status(500).json({ message: "Gagal menghapus user" });
+    }
   });
+
+
+// -------------------------------------------------------------------
+// GET ALL IKLAN (JOIN dengan admin & gudang)
+// -------------------------------------------------------------------
+app.get("/iklan", async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT 
+        iklan.id AS id_iklan,
+        iklan.id_admin,
+        gudang.id AS id_gudang,
+        gudang.nama,
+        gudang.deskripsi,
+        gudang.lokasi,
+        gudang.harga,
+        gudang.per,
+        gudang.luas,
+        gudang.fasilitas,
+        gudang.foto,
+        gudang.status
+      FROM iklan
+      JOIN gudang ON iklan.id_gudang = gudang.id
+    `);
+
+    return res.status(200).json(rows);
+
+  } catch (error) {
+    console.error("GET IKLAN ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Gagal mengambil data iklan."
+    });
+  }
 });
 
 
-app.listen(3001, () => {
-  console.log('Server berjalan di port 3001');
+// -------------------------------------------------------------------
+// GET IKLAN BY ID
+// -------------------------------------------------------------------
+app.get('/iklan/:id', async (req, res) => {
+  try {
+      const { id } = req.params;
+      const [rows] = await db.execute(`
+          SELECT i.id, i.id_admin, u.name AS nama_admin,
+                 i.id_gudang, g.nama AS nama_gudang,
+                 i.created_at, i.updated_at
+          FROM iklan i
+          JOIN users u ON i.id_admin = u.id
+          JOIN gudang g ON i.id_gudang = g.id
+          WHERE i.id = ?
+      `, [id]);
+
+      if (rows.length === 0) {
+          return res.status(404).json({ message: 'Iklan tidak ditemukan.' });
+      }
+
+      res.json(rows[0]);
+  } catch (error) {
+      console.error("GET IKLAN BY ID ERROR:", error);
+      res.status(500).json({ message: 'Gagal mengambil data iklan.' });
+  }
 });
+
+// -------------------------------------------------------------------
+// CREATE IKLAN
+// -------------------------------------------------------------------
+app.post('/iklan', async (req, res) => {
+  try {
+      const { id_admin, id_gudang } = req.body;
+
+      if (!id_admin || !id_gudang) {
+          return res.status(400).json({ message: 'id_admin dan id_gudang wajib diisi.' });
+      }
+
+      const [result] = await db.execute(`
+          INSERT INTO iklan (id_admin, id_gudang, created_at, updated_at)
+          VALUES (?, ?, NOW(), NOW())
+      `, [id_admin, id_gudang]);
+
+      res.status(201).json({ message: 'Iklan berhasil ditambahkan.', id: result.insertId });
+  } catch (error) {
+      console.error("CREATE IKLAN ERROR:", error);
+      res.status(500).json({ message: 'Gagal menambahkan iklan.' });
+  }
+});
+
+// -------------------------------------------------------------------
+// UPDATE IKLAN
+// -------------------------------------------------------------------
+app.put('/iklan/:id', async (req, res) => {
+  try {
+      const { id } = req.params;
+      const { id_admin, id_gudang } = req.body;
+
+      const [result] = await db.execute(`
+          UPDATE iklan
+          SET id_admin = ?, id_gudang = ?, updated_at = NOW()
+          WHERE id = ?
+      `, [id_admin, id_gudang, id]);
+
+      if (result.affectedRows === 0) {
+          return res.status(404).json({ message: 'Iklan tidak ditemukan.' });
+      }
+
+      res.json({ message: 'Iklan berhasil diperbarui.' });
+  } catch (error) {
+      console.error("UPDATE IKLAN ERROR:", error);
+      res.status(500).json({ message: 'Gagal memperbarui iklan.' });
+  }
+});
+
+// -------------------------------------------------------------------
+// DELETE IKLAN
+// -------------------------------------------------------------------
+app.delete('/iklan/:id', async (req, res) => {
+  try {
+      const { id } = req.params;
+
+      const [result] = await db.execute(
+        "DELETE FROM iklan WHERE id = ?",
+        [id]
+      );
+
+      if (result.affectedRows === 0) {
+          return res.status(404).json({ message: 'Iklan tidak ditemukan.' });
+      }
+
+      res.json({ message: 'Iklan berhasil dihapus.' });
+  } catch (error) {
+      console.error("DELETE IKLAN ERROR:", error);
+      res.status(500).json({ message: 'Gagal menghapus iklan.' });
+  }
+});
+
+  app.listen(port, () => {
+    console.log(`Server berjalan di http://localhost:${port}`);
+  });
+  

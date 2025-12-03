@@ -1,19 +1,29 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
+import './login.css'
+import './register.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Register from "./register.jsx";
 import Login from "./login.jsx";
-import Coba from "./coba.jsx";
 import Navbar from './navbar.jsx'
 import Header from './header.jsx'
-import Fitur from './fitur.jsx'
-import Layanan from './layanan.jsx'
-import About from './about.jsx'
-import Kontak from './kontak.jsx'
+import Keunggulan from './keunggulan.jsx'
+import DaftarGudang from './daftarGudang.jsx'
+import CaraKerja from './caraKerja.jsx'
+import TentangKami from './tentangKami.jsx'
+import Footer from './footer.jsx';
+
+import DashboardCustomer from "./dashboard_customer.jsx";
+import FavoriteCustomer from './favoriteCustomer.jsx';
+import ProfileCustomer from './profileCustomer.jsx';
+import UpdateProfileCustomer from './updateProfileCustomer.jsx';
+import DetailGudang from './detailGudang.jsx';
+
+import DashboardAdmin from './dashboard_admin.jsx';
+import KelolaGudang from './kelolaGudang.jsx';
+import KelolaUsers from './kelola_users.jsx';
+import AdminHome from './adminHome.jsx';
 
 function App() {
   return (
@@ -26,31 +36,37 @@ function App() {
             path="/beranda"
             element={
               <div className="flex-column" style={{display: 'flex'}}>
-                <div className="flex-column" style={{background:"linear-gradient(1deg, rgba(31, 194, 149, 0.2), rgba(37, 128, 213, 0.1)", display: 'flex', paddingLeft: '100px', paddingRight: '100px', paddingTop: '10px'}}>
+                <div className="flex-column" style={{background:"#ffffff", display: 'flex', paddingLeft: '100px', paddingRight: '100px', paddingTop: '10px'}}>
                   <Navbar></Navbar>
-                  {/* Section Header */}
+                 
+                </div>
+                 {/* Section Header */}
                   <section id="header">
                       <Header></Header>
                   </section>
-                </div>
                   {/* Section Layanan */}
-                  <section id="fitur">
-                    <Fitur></Fitur>
+                  <section id="keunggulanKami">
+                    <Keunggulan></Keunggulan>
                   </section>
 
                   {/* Section Layanan */}
-                  <section id="layanan" style={{paddingTop: '20px'}}>
-                    <Layanan></Layanan>
+                  <section id="daftarGudang" style={{paddingTop: '20px'}}>
+                    <DaftarGudang></DaftarGudang>
                   </section>
 
                   {/* Section About */}
-                  <section id="about" style={{marginBottom: '50px'}}>
-                    <About></About>
+                  <section id="caraKerja" style={{marginBottom: '50px'}}>
+                    <CaraKerja></CaraKerja>
                   </section>
 
                   {/* Section Kontak */}
-                  <section id="kontak">
-                      <Kontak></Kontak>
+                  <section id="tentangKami">
+                      <TentangKami></TentangKami>
+                  </section>
+
+                  {/* Section Kontak */}
+                  <section id="footer">
+                      <Footer></Footer>
                   </section>
                 
               </div>
@@ -59,11 +75,23 @@ function App() {
           {/* Halaman login dan register */}  
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+
+          {/* CUSTOMER */}
+          <Route path="/dashboard_customer" element={<DashboardCustomer />} />
+          <Route path="/favorite_customer" element={<FavoriteCustomer />} />
+          <Route path="/profile_customer" element={<ProfileCustomer />} />
+          <Route path='/update_profile_customer' element= {<UpdateProfileCustomer />} />
+          <Route path='/detail_gudang' element= {<DetailGudang />} />
+
+          {/* ADMIN */}
+          <Route path="/admin/dashboard" element={<DashboardAdmin />}>
+            <Route index element={<AdminHome />} />
+            <Route path="gudang" element={<KelolaGudang />} />
+            <Route path="user" element={<KelolaUsers />} />
+          </Route>
+          
         </Routes>
       </Router>
-    {/* <div>
-      <Coba />
-    </div> */}
     </>
   )
 }
