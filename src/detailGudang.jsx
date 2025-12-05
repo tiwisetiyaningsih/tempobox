@@ -60,7 +60,7 @@ const DetailGudang = () => {
         const gudangName = gudangData.name;
         const sizeDetail = gudangData.details.find(d => d.keterangan === 'Luas')?.detail || "Tidak Diketahui";
         const locationDetail = gudangData.details.find(d => d.keterangan === 'Lokasi')?.detail || "Tidak Diketahui";
-        const userName = userData.name || "Nama Pengguna"; // ambil nama user dari DB/localStorage
+        const userName = userData.name || "Nama Pengguna"; 
 
         const messageTemplate = 
             `Permisi ka\n` +

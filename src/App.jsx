@@ -2,8 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import './login.css'
 import './register.css'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Register from "./register.jsx";
 import Login from "./login.jsx";
@@ -14,13 +13,17 @@ import DaftarGudang from './daftarGudang.jsx'
 import CaraKerja from './caraKerja.jsx'
 import TentangKami from './tentangKami.jsx'
 import Footer from './footer.jsx';
+
 import DashboardCustomer from "./dashboard_customer.jsx";
 import FavoriteCustomer from './favoriteCustomer.jsx';
 import ProfileCustomer from './profileCustomer.jsx';
 import UpdateProfileCustomer from './updateProfileCustomer.jsx';
 import DetailGudang from './detailGudang.jsx';
+
 import DashboardAdmin from './dashboard_admin.jsx';
-import KelolaUsers from './kelola_users.jsx';
+import KelolaGudang from './kelolaGudang.jsx';
+import KelolaUsers from './kelolaUsers.jsx';
+import AdminHome from './adminHome.jsx';
 
 function App() {
   return (
@@ -72,13 +75,21 @@ function App() {
           {/* Halaman login dan register */}  
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+
+          {/* CUSTOMER */}
           <Route path="/dashboard_customer" element={<DashboardCustomer />} />
           <Route path="/favorite_customer" element={<FavoriteCustomer />} />
           <Route path="/profile_customer" element={<ProfileCustomer />} />
           <Route path='/update_profile_customer' element= {<UpdateProfileCustomer />} />
           <Route path='/detail_gudang/:id' element= {<DetailGudang />} />
-          <Route path='/admin/dashboard' element= {<DashboardAdmin />} />
-          <Route path='/kelola_users' element= {<KelolaUsers/>} />
+
+          {/* ADMIN */}
+          <Route path="/admin/dashboard" element={<DashboardAdmin />}>
+            <Route index element={<AdminHome />} />
+            <Route path="gudang" element={<KelolaGudang />} />
+            <Route path="user" element={<KelolaUsers />} />
+          </Route>
+          
         </Routes>
       </Router>
     </>

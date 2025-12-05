@@ -40,10 +40,13 @@ export default function DaftarGudang() {
                     }}
                   >
                     <img
-                      src={item.gambar_1 || "No Image"}
-                      alt={" _" + item.nama_gudang}
-                      style={{fontSize:'12px'}}
-                      className="w-100 h-100 object-fit-cover"
+                      src={
+                       item.gambar_1 ? `http://localhost:3001/uploads/${item.gambar_1.replace("uploads/", "")}`
+                        : "No Image"
+                        }
+                        className="card-img-top"
+                        style={{ height: "200px", objectFit: "cover" }}
+                        alt={item.nama}
                     />
                     
                   </div>

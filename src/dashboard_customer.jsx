@@ -193,11 +193,17 @@ const DashboardCustomer = () => {
 
                                         <div className="position-relative">
                                             <img
-                                                src={gudang.gambar_1 || "/default_gudang.png"}
+                                                src={
+                                                    gudang.gambar_1
+                                                    ? `http://localhost:3001/uploads/${gudang.gambar_1.replace("uploads/", "")}`
+                                                    : "No Image"
+                                                }
                                                 className="card-img-top"
                                                 style={{ height: "200px", objectFit: "cover" }}
-                                                alt="gudang"
+                                                alt={gudang.nama}
                                             />
+
+
 
                                             <button 
                                                 className="btn btn-light rounded-circle p-1.5 position-absolute top-0 end-0 m-3 shadow-sm" 

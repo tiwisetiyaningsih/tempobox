@@ -192,11 +192,15 @@ const FavoriteCustomer = () => {
                                     <div className="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
 
                                         <div className="position-relative">
-                                            <img
-                                                src={gudang.gambar_1 || "/default_gudang.png"}
+                                           <img
+                                                src={
+                                                    gudang.gambar_1
+                                                    ? `http://localhost:3001/uploads/${gudang.gambar_1.replace("uploads/", "")}`
+                                                    : "No Image"
+                                                }
                                                 className="card-img-top"
                                                 style={{ height: "200px", objectFit: "cover" }}
-                                                alt="gudang"
+                                                alt={gudang.nama}
                                             />
 
                                             <button

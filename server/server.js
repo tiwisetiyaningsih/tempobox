@@ -21,14 +21,17 @@ app.use("/uploads", express.static("uploads"));
 // MULTER SETUP (UPLOAD FOTO)
 // ========================
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "uploads/");
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); 
+  },
+  filename: function (req, file, cb) {
+    const uniqueName =
+      Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueName + path.extname(file.originalname));
+  },
 });
-const upload = multer({ storage });
+
+const upload = multer({ storage: storage });
 
 
 // -------------------------------------------------------------------
@@ -310,87 +313,113 @@ app.get('/gudang/:id', async (req, res) => {
 });
 
 // ----------- CREATE GUDANG -------------
-app.post('/gudang', async (req, res) => {
+app.post("/gudang", upload.fields([
+    { name: "gambar_1", maxCount: 1 },
+    { name: "gambar_2", maxCount: 1 },
+    { name: "gambar_3", maxCount: 1 },
+  ]), async (req, res) => {
     try {
-        const data = req.body;
-
-        const sql = `
-            INSERT INTO gudang 
-            (gambar_1, gambar_2, gambar_3, nama, deskripsi, lokasi, harga, per, luas, fasilitas, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        const values = [
-            data.gambar_1,
-            data.gambar_2,
-            data.gambar_3,
-            data.nama,
-            data.deskripsi,
-            data.lokasi,
-            data.harga,
-            data.per,
-            data.luas,
-            data.fasilitas,
-            data.status
-        ];
-
-        const [result] = await db.execute(sql, values);
-        res.status(201).json({ message: 'Data gudang berhasil ditambahkan.', id: result.insertId });
-
+      const {
+        nama,
+        lokasi,
+        harga,
+        per,
+        luas,
+        fasilitas,
+        deskripsi
+      } = req.body;
+  
+      const gambar1 = req.files?.gambar_1?.[0]?.filename || null;
+      const gambar2 = req.files?.gambar_2?.[0]?.filename || null;
+      const gambar3 = req.files?.gambar_3?.[0]?.filename || null;
+  
+      const sql = `
+        INSERT INTO gudang 
+        (gambar_1, gambar_2, gambar_3, nama, deskripsi, lokasi, harga, per, luas, fasilitas, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Tersedia')
+      `;
+    
+      await db.execute(sql, [
+        gambar1,
+        gambar2,
+        gambar3,
+        nama,
+        deskripsi,
+        lokasi,
+        harga,
+        per,
+        luas,
+        fasilitas
+      ]);
+  
+      res.status(201).json({ message: "Gudang berhasil ditambahkan" });
+  
     } catch (error) {
-        console.error("CREATE GUDANG ERROR:", error);
-        res.status(500).json({ message: 'Gagal menambahkan data gudang.' });
+      console.error("ERROR POST GUDANG:", error);
+      res.status(500).json({ message: "Terjadi kesalahan server" });
     }
-});
+  });
+
 
 // ----------- UPDATE GUDANG -------------
-app.put('/gudang/:id', async (req, res) => {
+app.put("/gudang/:id", upload.fields([
+    { name: "gambar_1", maxCount: 1 },
+    { name: "gambar_2", maxCount: 1 },
+    { name: "gambar_3", maxCount: 1 },
+  ]), async (req, res) => {
     try {
-        const data = req.body;
+      const { id } = req.params;
+      const { nama, lokasi, harga, per, luas, fasilitas, deskripsi, gambar_1_lama, gambar_2_lama, gambar_3_lama } = req.body;
+  
+      const gambar1 = req.files?.gambar_1?.[0]?.filename || gambar_1_lama;
+      const gambar2 = req.files?.gambar_2?.[0]?.filename || gambar_2_lama;
+      const gambar3 = req.files?.gambar_3?.[0]?.filename || gambar_3_lama;
+  
+      const sql = `
+      UPDATE gudang SET 
+      nama=?, lokasi=?, harga=?, per=?, luas=?, fasilitas=?, deskripsi=?,
+      gambar_1=?, gambar_2=?, gambar_3=?
+      WHERE id=?
+    `;
 
-        const sql = `
-            UPDATE gudang SET
-                gambar_1 = ?, gambar_2 = ?, gambar_3 = ?,
-                nama = ?, deskripsi = ?, lokasi = ?,
-                harga = ?, per = ?, luas = ?, fasilitas = ?, status = ?
-            WHERE id = ?
-        `;
+    await db.execute(sql, [
+      nama,
+      lokasi,
+      harga,
+      per,
+      luas,
+      fasilitas,
+      deskripsi,
+      gambar1,
+      gambar2,
+      gambar3,
+      id
+    ]);
+  
+    res.status(200).json({
+      success: true,
+      message: "Gudang berhasil diperbarui",
+    });
 
-        const values = [
-            data.gambar_1,
-            data.gambar_2,
-            data.gambar_3,
-            data.nama,
-            data.deskripsi,
-            data.lokasi,
-            data.harga,
-            data.per,
-            data.luas,
-            data.fasilitas,
-            data.status,
-            req.params.id
-        ];
-
-        await db.execute(sql, values);
-
-        res.json({ message: 'Data gudang berhasil diperbarui.' });
-
-    } catch (error) {
-        console.error("UPDATE GUDANG ERROR:", error);
-        res.status(500).json({ message: 'Gagal memperbarui data gudang.' });
-    }
+  } catch (error) {
+    console.error("PUT ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan server",
+    });
+  }
 });
 
 // ----------- DELETE GUDANG -------------
-app.delete('/gudang/:id', async (req, res) => {
+  app.delete("/gudang/:id", async (req, res) => {
     try {
-        await db.execute('DELETE FROM gudang WHERE id = ?', [req.params.id]);
-        res.json({ message: 'Data gudang berhasil dihapus.' });
-    } catch (error) {
-        console.error("DELETE GUDANG ERROR:", error);
-        res.status(500).json({ message: 'Gagal menghapus data gudang.' });
+      const { id } = req.params;
+      await db.execute("DELETE FROM gudang WHERE id = ?", [id]);
+      res.json({ message: "Gudang berhasil dihapus" });
+    } catch (err) {
+      res.status(500).json({ message: "Gagal menghapus gudang" });
     }
-});
+  });
 
 
 // =====================================================
@@ -568,3 +597,4 @@ app.delete('/iklan/:id', async (req, res) => {
 app.listen(port, () => {
     console.log(`Server berjalan di http://localhost:${port}`);
 });
+

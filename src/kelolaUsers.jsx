@@ -210,62 +210,7 @@ function KelolaUsers() {
 
 
   return (
-    <div className="d-flex users-dashboard-container vh-100">
-      
-      {/* SIDEBAR */}
-      <div className="sidebar bg-white border-end d-flex flex-column p-3">
-        <div className="sidebar-header mb-4 text-start">
-          <img src={logoTempoBox} className="logoTempoBox" alt="TempoBox logo" style={{ height: '35px', margin:'5px 0px' }} />
-        </div>
-
-        <nav className="nav flex-column flex-grow-1">
-          <Link 
-            to="/admin/dashboard" 
-            className={`nav-link text-dark py-2 d-flex align-items-center gap-2 ${activeMenu === 'Dashboard' ? 'active-menu' : ''}`}
-            onClick={() => setActiveMenu('Dashboard')}
-          >
-            <i className="bi bi-grid-fill"></i> Dashboard
-          </Link>
-
-          <Link 
-            to="/kelola_gudang" 
-            className={`nav-link text-dark py-2 d-flex align-items-center gap-2 ${activeMenu === 'Kelola Gudang' ? 'active-menu' : ''}`}
-            onClick={() => setActiveMenu('Kelola Gudang')}
-          >
-            <i className="bi bi-archive-fill"></i> Kelola Gudang
-          </Link>
-
-          <Link 
-            to="#" 
-            className={`nav-link text-dark py-2 d-flex align-items-center gap-2 ${activeMenu === 'Kelola User' ? 'active-menu' : ''}`}
-            onClick={() => setActiveMenu('Kelola User')}
-          >
-            <i className="bi bi-people-fill"></i> Kelola User
-          </Link>
-        </nav>
-      </div>
-
-      {/* MAIN CONTENT */}
-      <div className="main-content flex-grow-1 d-flex flex-column">
-
-        {/* TOP NAVBAR */}
-        <nav className="navbar navbar-light bg-white border-bottom p-3">
-          <div className="container-fluid">
-            <span className="navbar-brand mb-0 h1">Dashboard Admin</span>
-
-            <div className="d-flex align-items-center">
-              <div className="text-end me-3">
-                <div className="small text-muted">{adminInfo.name}</div>
-                <div className="fw-semibold">{adminInfo.email}</div>
-              </div>
-
-              <button className="btn btn-outline-danger btn-sm" onClick={handleLogout}>
-                <i className="bi bi-box-arrow-right me-1"></i> Keluar
-              </button>
-            </div>
-          </div>
-        </nav>
-
+    <div className="d-flex users-dashboard-container">
         {/* CONTENT AREA */}
         <div className="content-area p-4 flex-grow-1">
             <div>
@@ -685,7 +630,7 @@ function KelolaUsers() {
             </div>
         </div>
       </div>
-    </div>
+    
   );
 }
 
